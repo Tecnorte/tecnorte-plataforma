@@ -1,0 +1,192 @@
+/* ============================================================
+   TecNorte Informática • Checkout
+   Tema: Azul tecnológico, limpo e centrado
+   ============================================================ */
+
+/* ----- Reset e base ----- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: "Poppins", Arial, sans-serif;
+  background: linear-gradient(180deg, #f8fbff 0%, #eaf1ff 100%);
+  color: #0f2c59;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  align-items: center;
+}
+
+/* ----- Cabeçalho ----- */
+header {
+  width: 100%;
+  background: linear-gradient(90deg, #002b80, #005bff);
+  color: white;
+  text-align: center;
+  padding: 16px 10px;
+  box-shadow: 0 4px 10px rgba(0, 40, 120, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+header img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ffffffaa;
+}
+
+header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* ----- Container do checkout ----- */
+.checkout-container {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 30, 100, 0.1);
+  width: min(600px, 90vw);
+  margin: 30px auto;
+  padding: 30px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.checkout-container h2,
+.checkout-container h3 {
+  color: #002b80;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+#resumoCarrinho p {
+  margin: 4px 0;
+  font-size: 15px;
+  color: #333;
+  text-align: left;
+}
+
+#totalCheckout {
+  font-weight: 700;
+  color: #0055ff;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 18px;
+}
+
+/* ----- Botões ----- */
+button {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#pagPix {
+  background: linear-gradient(90deg, #00c6ff, #0072ff);
+  color: white;
+  flex: 1;
+  margin-right: 5px;
+}
+#pagPix:hover {
+  background: #0077ff;
+}
+
+#pagCartao {
+  background: linear-gradient(90deg, #ff8a00, #e52e71);
+  color: white;
+  flex: 1;
+  margin-left: 5px;
+}
+#pagCartao:hover {
+  opacity: 0.9;
+}
+
+#confirmarCartao {
+  background: #0077ff;
+  color: white;
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* ----- PIX Section ----- */
+#pixSection {
+  text-align: center;
+}
+
+#qrcode {
+  margin: 20px auto;
+  background: white;
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 0 12px rgba(0, 50, 150, 0.1);
+}
+
+#pixCode {
+  font-size: 14px;
+  color: #002b80;
+  word-wrap: break-word;
+  margin: 10px auto;
+  width: 90%;
+}
+
+/* ----- Cartão Section ----- */
+#cartaoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#cartaoSection input,
+#cartaoSection select {
+  padding: 10px;
+  border: 1px solid #b5c8ff;
+  border-radius: 8px;
+  outline: none;
+  font-size: 15px;
+}
+#cartaoSection input:focus,
+#cartaoSection select:focus {
+  border-color: #0077ff;
+  box-shadow: 0 0 0 3px rgba(0, 119, 255, 0.2);
+}
+
+/* ----- Mensagem final ----- */
+#mensagemFinal {
+  text-align: center;
+  padding: 20px;
+}
+#mensagemFinal h3 {
+  color: #0077ff;
+}
+
+/* ----- Rodapé ----- */
+footer {
+  text-align: center;
+  padding: 14px 0;
+  background: #001f66;
+  color: #fff;
+  font-size: 13px;
+  margin-top: auto;
+  width: 100%;
+}
+footer a {
+  color: #00bfff;
+  text-decoration: none;
+  font-weight: 600;
+}
+footer a:hover {
+  text-decoration: underline;
+}
+
+

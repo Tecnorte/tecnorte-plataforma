@@ -1,0 +1,221 @@
+/* ============================================================
+   TecNorte Informática - Loja Online
+   Tema: Azul tecnológico • Visual moderno e responsivo
+   ============================================================ */
+
+/* ====== BASE ====== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Poppins", "Segoe UI", sans-serif;
+  background: linear-gradient(180deg, #f8fbff 0%, #eaf1ff 100%);
+  color: #0f2c59;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ====== CABEÇALHO ====== */
+header {
+  background: linear-gradient(90deg, #002b80, #005bff);
+  color: white;
+  padding: 18px 20px;
+  box-shadow: 0 4px 10px rgba(0, 40, 120, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tn-logo {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ffffffaa;
+  background: #001a66;
+  box-shadow: 0 0 10px rgba(0, 120, 255, 0.4);
+}
+
+.tn-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+/* ====== CONTROLES DE FILTRO E BUSCA ====== */
+.tn-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border-bottom: 1px solid #d6e0f5;
+  padding: 14px 20px;
+}
+
+.tn-control--search input {
+  padding: 10px 14px;
+  border: 1px solid #b5c8ff;
+  border-radius: 10px;
+  width: 260px;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+.tn-control--search input:focus {
+  border-color: #0077ff;
+  box-shadow: 0 0 0 3px rgba(0, 119, 255, 0.2);
+}
+
+.tn-control--select select {
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid #b5c8ff;
+  background: #f8fbff;
+  font-size: 15px;
+  outline: none;
+}
+.tn-control--select select:hover {
+  border-color: #0077ff;
+}
+
+/* ====== GRID DE PRODUTOS ====== */
+.tn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 22px;
+  padding: 30px;
+  width: min(1100px, 94vw);
+  margin: 0 auto;
+}
+
+.tn-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(0, 30, 100, 0.08);
+  padding: 15px;
+  text-align: center;
+  border: 1px solid #e5ecff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tn-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 26px rgba(0, 50, 150, 0.15);
+}
+
+.tn-card__media img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.tn-card__title {
+  color: #002b80;
+  margin: 10px 0 5px;
+  font-weight: 600;
+  font-size: 17px;
+}
+
+.tn-card__desc {
+  color: #4c5c7a;
+  margin: 5px 0 10px;
+  font-size: 14px;
+  min-height: 40px;
+}
+
+/* ====== BOTÕES DE AÇÃO ====== */
+.tn-card__actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.tn-btn {
+  background: linear-gradient(90deg, #0077ff, #00bfff);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.tn-btn:hover {
+  background: #005ce6;
+  transform: translateY(-1px);
+}
+
+/* ====== MODAL ====== */
+.tn-modal {
+  display: none;
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  align-items: center;
+}
+.tn-modal[aria-hidden="false"] {
+  display: flex;
+}
+.tn-modal__dialog {
+  background: #fff;
+  border-radius: 12px;
+  width: min(600px, 90vw);
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* ====== RODAPÉ ====== */
+footer {
+  text-align: center;
+  padding: 16px 0;
+  background: #001f66;
+  color: #fff;
+  font-size: 14px;
+  margin-top: auto;
+}
+footer a {
+  color: #00bfff;
+  text-decoration: none;
+  font-weight: 600;
+}
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* ====== RESPONSIVIDADE ====== */
+@media (max-width: 600px) {
+  .tn-title {
+    font-size: 20px;
+  }
+
+  .tn-logo {
+    width: 55px;
+    height: 55px;
+  }
+
+  .tn-grid {
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .tn-card__desc {
+    font-size: 13px;
+  }
+}

@@ -1,0 +1,6 @@
+const IMAGENS_PRODUTOS = {
+  1: 'img/produtos/camiseta-amigo.jpg',
+  2: 'img/produtos/mouse-gamer.jpg',
+  3: 'img/produtos/teclado-mecanico.jpg'
+};
+const IMAGEM_PADRAO = 'img/produtos/placeholder.png';
