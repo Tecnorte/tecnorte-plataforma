@@ -6,7 +6,7 @@
 const campoCusto = document.getElementById("custo");
 const campoPreco = document.getElementById("preco");
 const campoMargem = document.getElementById("margem");
-const campoCategoria = document.getElementById("categoria"); // ✅ garante captura da categoria
+const campoCategoria = document.getElementById("categoria");
 
 function calcularMargem() {
   const custo = parseFloat(campoCusto.value);
@@ -21,7 +21,9 @@ function calcularMargem() {
 campoCusto.addEventListener("input", calcularMargem);
 campoPreco.addEventListener("input", calcularMargem);
 
+// ============================================================
 // 📸 Upload individual de até 3 imagens
+// ============================================================
 const imagens = [
   { input: "foto1", preview: "preview1", remove: "remove1" },
   { input: "foto2", preview: "preview2", remove: "remove2" },
@@ -57,7 +59,9 @@ imagens.forEach(({ input, preview, remove }, index) => {
   });
 });
 
-// 🔄 Limpar formulário (Novo Produto)
+// ============================================================
+// 🔁 Limpar formulário
+// ============================================================
 document.getElementById("btnNovo").addEventListener("click", () => {
   document.querySelector(".form-produto").reset();
   campoMargem.value = "";
@@ -69,26 +73,43 @@ document.getElementById("btnNovo").addEventListener("click", () => {
   alert("🆕 Formulário limpo para novo produto!");
 });
 
-// 🔄 Tabela de produtos
+// ============================================================
+// 🔁 Tabela de produtos
+// ============================================================
 const tabelaProdutos = document.getElementById("listaProdutos");
 
+// 🧠 Normalização segura de imagens — ETAPA 3
 function normalizarImagens(produto) {
-  if (Array.isArray(produto.imagens)) return produto.imagens;
+  // lista vazia
+  if (!produto) return [];
+
+  // se já é array
+  if (Array.isArray(produto.imagens) && produto.imagens.length > 0) {
+    return produto.imagens;
+  }
+
+  // se veio JSON string
   try {
     if (typeof produto.imagens === "string" && produto.imagens.trim() !== "") {
-      return JSON.parse(produto.imagens);
+      const arr = JSON.parse(produto.imagens);
+      if (Array.isArray(arr)) return arr;
     }
   } catch (_) {}
+
+  // compatibilidade com versões antigas → "imagem"
   if (produto.imagem) return [produto.imagem];
+
   return [];
 }
 
+// segurança em moeda
 function formatarMoeda(v) {
   const n = Number(v ?? 0);
+  if (isNaN(n)) return "R$ 0,00";
   return "R$ " + n.toFixed(2);
 }
 
-// 🏷️ Traduz categoria
+// traduz categoria
 function formatarCategoria(cat) {
   const mapa = {
     promocao: "🔥 Promoção do dia",
@@ -98,11 +119,17 @@ function formatarCategoria(cat) {
     carregadores: "⚡ Carregadores",
     notebooks: "💼 Notebooks",
   };
-  return mapa[cat] || cat;
+  return mapa[cat] || "-";
 }
 
+// ============================================================
+// 🖼️ Renderizar produto — versão segura
+// ============================================================
 function renderizarProduto(produto) {
+  if (!produto) return;
+
   const imgs = normalizarImagens(produto);
+
   const imagensHTML = imgs.length
     ? imgs
         .slice(0, 3)
@@ -121,7 +148,7 @@ function renderizarProduto(produto) {
     <td class="c-imagens">${imagensHTML}</td>
     <td class="c-nome">${produto.nome}</td>
     <td class="c-desc">${produto.descricao || "-"}</td>
-    <td class="c-cat">${produto.categoria ? formatarCategoria(produto.categoria) : "-"}</td>
+    <td class="c-cat">${formatarCategoria(produto.categoria)}</td>
     <td class="c-custo">${formatarMoeda(produto.custo)}</td>
     <td class="c-margem">${Number(produto.margem ?? 0).toFixed(2)}%</td>
     <td class="c-preco">${formatarMoeda(produto.preco)}</td>
@@ -138,21 +165,34 @@ function renderizarProduto(produto) {
   linha.querySelector(".editar").addEventListener("click", () =>
     editarInline(linha, produto)
   );
+
   tabelaProdutos.appendChild(linha);
 }
 
+// ============================================================
+// 🚀 Carregar produtos — seguro mesmo com banco vazio
+// ============================================================
 async function carregarProdutos() {
   tabelaProdutos.innerHTML = "";
   try {
     const r = await fetch("/produtos");
     const dados = await r.json();
+
+    if (!Array.isArray(dados) || dados.length === 0) {
+      tabelaProdutos.innerHTML =
+        "<tr><td colspan='10' style='text-align:center;'>Nenhum produto cadastrado.</td></tr>";
+      return;
+    }
+
     dados.forEach(renderizarProduto);
   } catch (e) {
     console.error("Erro ao carregar produtos:", e);
   }
 }
 
+// ============================================================
 // 💾 Salvar produto
+// ============================================================
 document.getElementById("btnSalvar").addEventListener("click", async () => {
   const nome = document.getElementById("nome").value.trim();
   const custo = document.getElementById("custo").value.trim();
@@ -200,7 +240,9 @@ document.getElementById("btnSalvar").addEventListener("click", async () => {
   }
 });
 
-// ✏️ Editar inline — agora com suporte a atualização de imagens
+// ============================================================
+// ✏️ Editar (corrigido, seguro)
+// ============================================================
 function editarInline(linha, produto) {
   if (linha.classList.contains("editando")) return;
   linha.classList.add("editando");
@@ -252,7 +294,6 @@ function editarInline(linha, produto) {
     </td>
   `;
 
-  // Remover imagem existente
   linha.querySelectorAll(".remover-img").forEach((btn) =>
     btn.addEventListener("click", () => {
       const index = parseInt(btn.dataset.index);
@@ -261,7 +302,6 @@ function editarInline(linha, produto) {
     })
   );
 
-  // Adicionar nova imagem
   linha.querySelector(".nova-imagem").addEventListener("change", (e) => {
     const arquivo = e.target.files[0];
     if (!arquivo) return;
@@ -303,7 +343,9 @@ function editarInline(linha, produto) {
   });
 }
 
+// ============================================================
 // 🗑️ Excluir produto
+// ============================================================
 async function excluirProduto(id, linha) {
   if (!confirm("Tem certeza que deseja excluir este produto?")) return;
   try {
@@ -321,8 +363,11 @@ async function excluirProduto(id, linha) {
   }
 }
 
+// ============================================================
 // 🚀 Inicialização
+// ============================================================
 document.addEventListener("DOMContentLoaded", carregarProdutos);
+
 
 
 

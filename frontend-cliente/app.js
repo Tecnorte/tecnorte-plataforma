@@ -40,20 +40,48 @@ function formatarMoeda(v) {
   return "R$ " + n.toFixed(2);
 }
 
+// ✅ ETAPA 4: normalização de imagens mais inteligente
 function normalizarImagens(produto) {
-  // Aceita: array, JSON string, campos individuais ou único
-  if (Array.isArray(produto.imagens)) return produto.imagens.filter(Boolean);
+  if (!produto) return [];
 
-  try {
-    if (typeof produto.imagens === "string" && produto.imagens.trim() !== "") {
-      return JSON.parse(produto.imagens).filter(Boolean);
+  // 1) Se já for array, filtra vazios
+  if (Array.isArray(produto.imagens)) {
+    return produto.imagens.filter(Boolean);
+  }
+
+  // 2) Se for string
+  if (typeof produto.imagens === "string" && produto.imagens.trim() !== "") {
+    const texto = produto.imagens.trim();
+
+    // 2.1) Se começar com data:image, é uma ÚNICA imagem base64
+    if (texto.startsWith("data:image")) {
+      return [texto];
     }
-  } catch (_) {}
 
+    // 2.2) Se parecer JSON (começa com [ e termina com ])
+    if (texto.startsWith("[") && texto.endsWith("]")) {
+      try {
+        const arr = JSON.parse(texto);
+        if (Array.isArray(arr)) {
+          return arr.filter(Boolean);
+        }
+      } catch (_) {
+        // se quebrar, continua tentando outras opções
+      }
+    }
+  }
+
+  // 3) Campos individuais (migrados ou antigos)
   if (produto.foto1 || produto.foto2 || produto.foto3) {
     return [produto.foto1, produto.foto2, produto.foto3].filter(Boolean);
   }
-  if (produto.imagem) return [produto.imagem];
+
+  // 4) Campo único "imagem" (caminho ou base64)
+  if (produto.imagem && typeof produto.imagem === "string") {
+    return [produto.imagem];
+  }
+
+  // 5) Se nada funcionar → sem imagem
   return [];
 }
 
@@ -98,8 +126,12 @@ function renderGrid(lista) {
     `;
 
     // Ações de clique
-    card.querySelector('[data-action="ver"]').addEventListener("click", () => abrirModal(p));
-    card.querySelector('[data-action="comprar"]').addEventListener("click", () => comprar(p));
+    card
+      .querySelector('[data-action="ver"]')
+      .addEventListener("click", () => abrirModal(p));
+    card
+      .querySelector('[data-action="comprar"]')
+      .addEventListener("click", () => comprar(p));
 
     frag.appendChild(card);
   });
@@ -127,7 +159,9 @@ function abrirModal(produto) {
     if (idx === 0) t.classList.add("is-active");
     t.addEventListener("click", () => {
       modalImagem.src = src;
-      modalThumbs.querySelectorAll("img").forEach((im) => im.classList.remove("is-active"));
+      modalThumbs
+        .querySelectorAll("img")
+        .forEach((im) => im.classList.remove("is-active"));
       t.classList.add("is-active");
     });
     modalThumbs.appendChild(t);
@@ -175,8 +209,14 @@ async function carregarProdutos() {
 
     produtos = (data || []).map((p) => {
       let preco = Number(p.preco);
-      if ((preco === null || isNaN(preco)) && p.custo != null && p.margem != null) {
-        preco = Number((Number(p.custo) * (1 + Number(p.margem) / 100)).toFixed(2));
+      if (
+        (preco === null || isNaN(preco)) &&
+        p.custo != null &&
+        p.margem != null
+      ) {
+        preco = Number(
+          (Number(p.custo) * (1 + Number(p.margem) / 100)).toFixed(2)
+        );
       }
       return { ...p, preco };
     });
@@ -186,7 +226,8 @@ async function carregarProdutos() {
     console.error("Erro ao carregar produtos:", e);
     grid.innerHTML = "";
     msgVazia.style.display = "block";
-    msgVazia.textContent = "❌ Não foi possível carregar os produtos. Verifique o servidor.";
+    msgVazia.textContent =
+      "❌ Não foi possível carregar os produtos. Verifique o servidor.";
   }
 }
 
@@ -203,22 +244,21 @@ function comprar(produto) {
   });
 
   // Atualiza o total
-  const totalAtual = (carrinho.reduce((acc, p) => acc + Number(p.preco || 0), 0)).toFixed(2);
+  const totalAtual = carrinho
+    .reduce((acc, p) => acc + Number(p.preco || 0), 0)
+    .toFixed(2);
 
   // Salva no localStorage
   localStorage.setItem("carrinho", JSON.stringify(carrinho));
   localStorage.setItem("totalCarrinho", totalAtual);
 
   // Mostra confirmação e redireciona
-  alert(`🛒 '${produto.nome}' adicionado ao carrinho com sucesso! Indo para o checkout...`);
+  alert(
+    `🛒 '${produto.nome}' adicionado ao carrinho com sucesso! Indo para o checkout...`
+  );
   window.location.href = "/frontend-cliente/checkout.html";
 }
 
 // 🚀 Inicialização
 document.addEventListener("DOMContentLoaded", carregarProdutos);
-
-
-
-
-
 
