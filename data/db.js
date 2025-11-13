@@ -145,10 +145,18 @@ db.serialize(() => {
   });
 
   // ============================================================
-  // 📦 Inserir produtos iniciais
+  // 📦 Inserir produtos iniciais — AGORA CORRIGIDO
   // ============================================================
   db.get('SELECT COUNT(*) AS total FROM produtos', (err, row) => {
-    if (row.total === 0) {
+    if (err) {
+      console.error('⚠️ Erro ao contar produtos no banco:', err);
+      return;
+    }
+
+    const total = row && typeof row.total === "number" ? row.total : 0;
+
+    // Apenas insere SE for realmente zero
+    if (total === 0) {
       console.log("🆕 Inserindo produtos iniciais...");
 
       const produtosIniciais = [
@@ -208,6 +216,9 @@ db.serialize(() => {
       }
 
       insert.finalize();
+      console.log('✅ Produtos iniciais adicionados com sucesso!');
+    } else {
+      console.log(`📦 Produtos já existentes no banco (total: ${total}).`);
     }
   });
 
