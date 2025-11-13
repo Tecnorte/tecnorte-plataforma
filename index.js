@@ -9,23 +9,32 @@ const app = express();
 const port = 3000;
 
 // ===========================================
+// 🧠 Inicializar Banco de Dados TecNorte (FIX DEFINITIVO)
+// ===========================================
+// ⚠️ IMPORTANTE: sem isso o Render reinicia o banco toda vez
+require('./data/db');
+
+// ===========================================
 // 🧩 Middleware
 // ===========================================
 app.use(cors());
 
-// ✅ Aumentar o limite de upload para 50MB (corrige erro PayloadTooLargeError e permite várias imagens)
+// ✅ Aumentar o limite de upload para 50MB
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// ✅ Servir as pastas públicas corretamente
+// ===========================================
+// 🖥️ Pastas públicas
+// ===========================================
+
 app.use('/frontend', express.static(path.join(__dirname, 'frontend')));
 app.use('/frontend-cliente', express.static(path.join(__dirname, 'frontend-cliente')));
 
-// ✅ Linha extra — garante que arquivos da pasta frontend fiquem acessíveis direto na raiz (ex: /style.css)
+// Linha extra — permite acessar arquivos direto da raiz
 app.use(express.static(path.join(__dirname, 'frontend')));
 
 // ===========================================
-// 🗂️ Garantir que a pasta 'data/cupons' exista
+// 🗂️ Garantir que a pasta data/cupons exista
 // ===========================================
 const pastaData = path.join(__dirname, 'data');
 const pastaCupons = path.join(pastaData, 'cupons');
@@ -39,7 +48,7 @@ if (!fs.existsSync(pastaCupons)) {
 }
 
 // ===========================================
-// 🧾 Torna o diretório de cupons acessível publicamente
+// 🧾 Disponibilizar PDF dos cupons publicamente
 // ===========================================
 app.use(
   '/data/cupons',
@@ -57,13 +66,13 @@ app.use(
 // 🚀 Rotas principais
 // ===========================================
 const produtosRoute = require('./routes/produtos');
-const pedidosRoute = require('./routes/pedidos'); // ✅ Rota de pedidos conectada
+const pedidosRoute = require('./routes/pedidos'); // rota dos pedidos
 
 app.use('/produtos', produtosRoute);
 app.use('/pedidos', pedidosRoute);
 
 // ===========================================
-// 🏠 Rota para abrir o site do cliente diretamente
+// 🏠 Rota do site do cliente
 // ===========================================
 app.get('/', (req, res) => {
   const caminho = path.join(__dirname, 'frontend-cliente', 'index.html');
@@ -71,7 +80,7 @@ app.get('/', (req, res) => {
 });
 
 // ===========================================
-// ⚙️ Rota para o painel administrativo
+// ⚙️ Rota do painel administrativo
 // ===========================================
 app.get('/admin', (req, res) => {
   const caminhoPainel = path.join(__dirname, 'frontend', 'index.html');
@@ -94,7 +103,7 @@ app.listen(port, () => {
   console.log(`🛒 Loja do cliente: http://localhost:${port}/`);
 
   // ===========================================
-  // 🔍 Teste automático: Verificar se o PDF foi gerado corretamente
+  // 🔍 Teste automático: localizar PDF mais recente
   // ===========================================
   const fsPromises = require('fs').promises;
 
@@ -116,7 +125,7 @@ app.listen(port, () => {
     }
   }
 
-  // Executa 2 segundos após iniciar o servidor
+  // Executar 2 segundos após iniciar o servidor
   setTimeout(verificarPDFs, 2000);
 });
 
