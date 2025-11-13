@@ -1,8 +1,16 @@
 // ============================================================
 // ⚙️ Painel Administrativo - TecNorte (CRUD completo + Categorias)
+// Compatível com backend /routes/produtos.js atual
 // ============================================================
 
-// 🧮 Cálculo automático da margem
+// =============================
+// 🔗 Config API
+// =============================
+const API_PRODUTOS = "/produtos";
+
+// =============================
+// 🧮 Cálculo automático da margem (form principal)
+// =============================
 const campoCusto = document.getElementById("custo");
 const campoPreco = document.getElementById("preco");
 const campoMargem = document.getElementById("margem");
@@ -11,6 +19,7 @@ const campoCategoria = document.getElementById("categoria");
 function calcularMargem() {
   const custo = parseFloat(campoCusto.value);
   const preco = parseFloat(campoPreco.value);
+
   if (!isNaN(custo) && !isNaN(preco) && custo > 0) {
     const margem = ((preco - custo) / custo) * 100;
     campoMargem.value = margem.toFixed(2);
@@ -18,23 +27,29 @@ function calcularMargem() {
     campoMargem.value = "";
   }
 }
-campoCusto.addEventListener("input", calcularMargem);
-campoPreco.addEventListener("input", calcularMargem);
 
-// ============================================================
-// 📸 Upload individual de até 3 imagens
-// ============================================================
-const imagens = [
+if (campoCusto && campoPreco && campoMargem) {
+  campoCusto.addEventListener("input", calcularMargem);
+  campoPreco.addEventListener("input", calcularMargem);
+}
+
+// =============================
+// 📸 Upload individual de até 3 imagens (form principal)
+// =============================
+const imagensSlots = [
   { input: "foto1", preview: "preview1", remove: "remove1" },
   { input: "foto2", preview: "preview2", remove: "remove2" },
   { input: "foto3", preview: "preview3", remove: "remove3" },
 ];
-let imagensBase64 = [];
 
-imagens.forEach(({ input, preview, remove }, index) => {
+let imagensBase64 = [null, null, null];
+
+imagensSlots.forEach(({ input, preview, remove }, index) => {
   const inputEl = document.getElementById(input);
   const previewEl = document.getElementById(preview);
   const removeEl = document.getElementById(remove);
+
+  if (!inputEl || !previewEl || !removeEl) return;
 
   inputEl.addEventListener("change", (e) => {
     const arquivo = e.target.files[0];
@@ -42,8 +57,9 @@ imagens.forEach(({ input, preview, remove }, index) => {
 
     const leitor = new FileReader();
     leitor.onload = (ev) => {
-      imagensBase64[index] = ev.target.result;
-      previewEl.src = ev.target.result;
+      const base64 = ev.target.result;
+      imagensBase64[index] = base64;
+      previewEl.src = base64;
       previewEl.style.display = "block";
       removeEl.style.display = "inline-block";
     };
@@ -59,57 +75,70 @@ imagens.forEach(({ input, preview, remove }, index) => {
   });
 });
 
-// ============================================================
-// 🔁 Limpar formulário
-// ============================================================
-document.getElementById("btnNovo").addEventListener("click", () => {
-  document.querySelector(".form-produto").reset();
-  campoMargem.value = "";
-  imagensBase64 = [];
-  imagens.forEach(({ preview, remove }) => {
-    document.getElementById(preview).style.display = "none";
-    document.getElementById(remove).style.display = "none";
-  });
-  alert("🆕 Formulário limpo para novo produto!");
-});
+// =============================
+// 🔄 Limpar formulário (Novo Produto)
+// =============================
+const btnNovo = document.getElementById("btnNovo");
+if (btnNovo) {
+  btnNovo.addEventListener("click", () => {
+    const form = document.querySelector(".form-produto");
+    if (form) form.reset();
+    if (campoMargem) campoMargem.value = "";
 
-// ============================================================
-// 🔁 Tabela de produtos
-// ============================================================
+    imagensBase64 = [null, null, null];
+    imagensSlots.forEach(({ preview, remove }) => {
+      const p = document.getElementById(preview);
+      const r = document.getElementById(remove);
+      if (p) p.style.display = "none";
+      if (r) r.style.display = "none";
+    });
+
+    alert("🆕 Formulário limpo para novo produto!");
+  });
+}
+
+// =============================
+// 📋 Tabela de produtos
+// =============================
 const tabelaProdutos = document.getElementById("listaProdutos");
 
-// 🧠 Normalização segura de imagens — ETAPA 3
+// Normaliza campo de imagens vindo do backend
 function normalizarImagens(produto) {
-  // lista vazia
   if (!produto) return [];
 
-  // se já é array
-  if (Array.isArray(produto.imagens) && produto.imagens.length > 0) {
-    return produto.imagens;
+  // Se backend já mandou array, só usa
+  if (Array.isArray(produto.imagens)) {
+    return produto.imagens.filter(Boolean);
   }
 
-  // se veio JSON string
-  try {
-    if (typeof produto.imagens === "string" && produto.imagens.trim() !== "") {
+  // Se veio como string JSON
+  if (typeof produto.imagens === "string" && produto.imagens.trim() !== "") {
+    try {
       const arr = JSON.parse(produto.imagens);
-      if (Array.isArray(arr)) return arr;
+      if (Array.isArray(arr)) return arr.filter(Boolean);
+    } catch {
+      // ignora
     }
-  } catch (_) {}
+  }
 
-  // compatibilidade com versões antigas → "imagem"
+  // Se vieram fotos individuais
+  const fotos = [produto.foto1, produto.foto2, produto.foto3].filter(
+    (v) => typeof v === "string" && v.trim() !== ""
+  );
+  if (fotos.length) return fotos;
+
+  // Fallback pra campo único
   if (produto.imagem) return [produto.imagem];
 
   return [];
 }
 
-// segurança em moeda
 function formatarMoeda(v) {
   const n = Number(v ?? 0);
-  if (isNaN(n)) return "R$ 0,00";
   return "R$ " + n.toFixed(2);
 }
 
-// traduz categoria
+// Traduz categoria para texto amigável
 function formatarCategoria(cat) {
   const mapa = {
     promocao: "🔥 Promoção do dia",
@@ -119,23 +148,19 @@ function formatarCategoria(cat) {
     carregadores: "⚡ Carregadores",
     notebooks: "💼 Notebooks",
   };
-  return mapa[cat] || "-";
+  if (!cat) return "-";
+  return mapa[cat] || cat;
 }
 
-// ============================================================
-// 🖼️ Renderizar produto — versão segura
-// ============================================================
+// Renderiza uma linha na tabela
 function renderizarProduto(produto) {
-  if (!produto) return;
-
   const imgs = normalizarImagens(produto);
-
   const imagensHTML = imgs.length
     ? imgs
         .slice(0, 3)
         .map(
           (src) =>
-            `<img src="${src}" style="width:50px;height:50px;border-radius:6px;margin-right:4px;">`
+            `<img src="${src}" style="width:50px;height:50px;border-radius:6px;margin-right:4px;object-fit:cover;">`
         )
         .join("")
     : "-";
@@ -159,90 +184,113 @@ function renderizarProduto(produto) {
     </td>
   `;
 
-  linha.querySelector(".excluir").addEventListener("click", () =>
-    excluirProduto(produto.id, linha)
-  );
-  linha.querySelector(".editar").addEventListener("click", () =>
-    editarInline(linha, produto)
-  );
+  const btnExcluir = linha.querySelector(".excluir");
+  const btnEditar = linha.querySelector(".editar");
 
-  tabelaProdutos.appendChild(linha);
+  if (btnExcluir) {
+    btnExcluir.addEventListener("click", () =>
+      excluirProduto(produto.id, linha)
+    );
+  }
+
+  if (btnEditar) {
+    btnEditar.addEventListener("click", () =>
+      editarInline(linha, produto)
+    );
+  }
+
+  if (tabelaProdutos) {
+    tabelaProdutos.appendChild(linha);
+  }
 }
 
-// ============================================================
-// 🚀 Carregar produtos — seguro mesmo com banco vazio
-// ============================================================
+// =============================
+// 🔄 Carregar produtos
+// =============================
 async function carregarProdutos() {
+  if (!tabelaProdutos) return;
+
   tabelaProdutos.innerHTML = "";
   try {
-    const r = await fetch("/produtos");
+    const r = await fetch(API_PRODUTOS);
     const dados = await r.json();
 
-    if (!Array.isArray(dados) || dados.length === 0) {
-      tabelaProdutos.innerHTML =
-        "<tr><td colspan='10' style='text-align:center;'>Nenhum produto cadastrado.</td></tr>";
+    (dados || []).forEach((p) => {
+      renderizarProduto(p);
+    });
+  } catch (e) {
+    console.error("Erro ao carregar produtos:", e);
+    alert("❌ Erro ao carregar produtos. Verifique o servidor.");
+  }
+}
+
+// =============================
+// 💾 Salvar produto (form principal)
+// =============================
+const btnSalvar = document.getElementById("btnSalvar");
+if (btnSalvar) {
+  btnSalvar.addEventListener("click", async () => {
+    const nome = document.getElementById("nome")?.value.trim();
+    const custo = document.getElementById("custo")?.value.trim();
+    const preco = document.getElementById("preco")?.value.trim();
+    const margem = document.getElementById("margem")?.value.trim();
+    const estoque = document.getElementById("estoque")?.value.trim();
+    const descricao = document.getElementById("descricao")?.value.trim();
+    const categoria = campoCategoria ? campoCategoria.value : "";
+
+    if (!nome || !custo || !preco || !estoque) {
+      alert("⚠️ Preencha todos os campos obrigatórios!");
       return;
     }
 
-    dados.forEach(renderizarProduto);
-  } catch (e) {
-    console.error("Erro ao carregar produtos:", e);
-  }
+    const produto = {
+      nome,
+      custo,
+      preco,
+      margem,
+      estoque,
+      descricao,
+      categoria,
+      imagens: imagensBase64.filter((img) => img),
+    };
+
+    try {
+      const resp = await fetch(API_PRODUTOS, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(produto),
+      });
+
+      if (!resp.ok) {
+        throw new Error("Erro ao salvar produto");
+      }
+
+      const novo = await resp.json();
+      renderizarProduto(novo);
+
+      alert("✅ Produto salvo com sucesso!");
+
+      const form = document.querySelector(".form-produto");
+      if (form) form.reset();
+      if (campoMargem) campoMargem.value = "";
+      imagensBase64 = [null, null, null];
+
+      imagensSlots.forEach(({ preview, remove }) => {
+        const p = document.getElementById(preview);
+        const r = document.getElementById(remove);
+        if (p) p.style.display = "none";
+        if (r) r.style.display = "none";
+      });
+    } catch (e) {
+      console.error(e);
+      alert("❌ Erro ao salvar produto.");
+    }
+  });
 }
 
-// ============================================================
-// 💾 Salvar produto
-// ============================================================
-document.getElementById("btnSalvar").addEventListener("click", async () => {
-  const nome = document.getElementById("nome").value.trim();
-  const custo = document.getElementById("custo").value.trim();
-  const preco = document.getElementById("preco").value.trim();
-  const margem = document.getElementById("margem").value.trim();
-  const estoque = document.getElementById("estoque").value.trim();
-  const descricao = document.getElementById("descricao").value.trim();
-  const categoria = campoCategoria.value || "";
-
-  if (!nome || !custo || !preco || !estoque) {
-    alert("⚠️ Preencha todos os campos obrigatórios!");
-    return;
-  }
-
-  const produto = {
-    nome,
-    custo,
-    preco,
-    margem,
-    estoque,
-    descricao,
-    categoria,
-    imagens: imagensBase64.filter((img) => img),
-  };
-
-  try {
-    const resp = await fetch("/produtos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(produto),
-    });
-    const novo = await resp.json();
-    renderizarProduto(novo);
-    alert("✅ Produto salvo com sucesso!");
-    document.querySelector(".form-produto").reset();
-    campoMargem.value = "";
-    imagensBase64 = [];
-    imagens.forEach(({ preview, remove }) => {
-      document.getElementById(preview).style.display = "none";
-      document.getElementById(remove).style.display = "none";
-    });
-  } catch (e) {
-    console.error(e);
-    alert("❌ Erro ao salvar produto.");
-  }
-});
-
-// ============================================================
-// ✏️ Editar (corrigido, seguro)
-// ============================================================
+// =============================
+// ✏️ Editar inline — com atualização de imagens
+// =============================
 function editarInline(linha, produto) {
   if (linha.classList.contains("editando")) return;
   linha.classList.add("editando");
@@ -257,24 +305,29 @@ function editarInline(linha, produto) {
   const imagensAtuais = normalizarImagens(produto);
   let novasImagens = [...imagensAtuais];
 
+  const imagensHTML =
+    imagensAtuais.length > 0
+      ? imagensAtuais
+          .map(
+            (src, i) => `
+    <div style="display:inline-block;text-align:center;margin-right:4px;">
+      <img src="${src}" style="width:50px;height:50px;border-radius:6px;display:block;margin-bottom:3px;object-fit:cover;">
+      <button class="remover-img" data-index="${i}" style="font-size:10px;">❌</button>
+    </div>`
+          )
+          .join("")
+      : "<small>Sem imagens</small>";
+
   linha.innerHTML = `
     <td>${produto.id}</td>
     <td class="c-imagens">
-      ${imagensAtuais
-        .map(
-          (src, i) => `
-            <div style="display:inline-block;text-align:center;margin-right:4px;">
-              <img src="${src}" style="width:50px;height:50px;border-radius:6px;display:block;margin-bottom:3px;">
-              <button class="remover-img" data-index="${i}" style="font-size:10px;">❌</button>
-            </div>`
-        )
-        .join("")}
-      <input type="file" class="nova-imagem" accept="image/*" style="display:block;margin-top:4px;">
+      ${imagensHTML}
+      <input type="file" class="nova-imagem" accept="image/*" style="display:block;margin-top:4px;font-size:12px;">
     </td>
-    <td><input value="${nome}"></td>
-    <td><input value="${desc}"></td>
+    <td><input value="${nome}" class="inp-nome"></td>
+    <td><input value="${desc}" class="inp-desc"></td>
     <td>
-      <select>
+      <select class="inp-cat">
         <option value="">Selecione a categoria</option>
         <option value="promocao" ${categoria === "promocao" ? "selected" : ""}>Promoção do dia</option>
         <option value="informatica" ${categoria === "informatica" ? "selected" : ""}>Informática</option>
@@ -284,75 +337,114 @@ function editarInline(linha, produto) {
         <option value="notebooks" ${categoria === "notebooks" ? "selected" : ""}>Notebooks</option>
       </select>
     </td>
-    <td><input type="number" step="0.01" value="${custo}"></td>
-    <td><input type="number" step="0.01" value="${margem}"></td>
-    <td><input type="number" step="0.01" value="${preco}"></td>
-    <td><input type="number" step="1" value="${estoque}"></td>
+    <td><input type="number" step="0.01" value="${custo}" class="inp-custo"></td>
+    <td><input type="number" step="0.01" value="${margem}" class="inp-margem"></td>
+    <td><input type="number" step="0.01" value="${preco}" class="inp-preco"></td>
+    <td><input type="number" step="1" value="${estoque}" class="inp-estoque"></td>
     <td>
       <button class="salvar">💾</button>
       <button class="cancelar">↩️</button>
     </td>
   `;
 
-  linha.querySelectorAll(".remover-img").forEach((btn) =>
+  // Remover imagem existente
+  linha.querySelectorAll(".remover-img").forEach((btn) => {
     btn.addEventListener("click", () => {
       const index = parseInt(btn.dataset.index);
-      novasImagens.splice(index, 1);
-      btn.parentElement.remove();
-    })
-  );
-
-  linha.querySelector(".nova-imagem").addEventListener("change", (e) => {
-    const arquivo = e.target.files[0];
-    if (!arquivo) return;
-    const leitor = new FileReader();
-    leitor.onload = (ev) => {
-      novasImagens.push(ev.target.result);
-      alert("✅ Nova imagem adicionada!");
-    };
-    leitor.readAsDataURL(arquivo);
+      if (!isNaN(index)) {
+        novasImagens.splice(index, 1);
+        btn.parentElement.remove();
+      }
+    });
   });
 
-  linha.querySelector(".cancelar").addEventListener("click", carregarProdutos);
+  // Adicionar nova imagem
+  const inputNova = linha.querySelector(".nova-imagem");
+  if (inputNova) {
+    inputNova.addEventListener("change", (e) => {
+      const arquivo = e.target.files[0];
+      if (!arquivo) return;
+      const leitor = new FileReader();
+      leitor.onload = (ev) => {
+        novasImagens.push(ev.target.result);
+        alert("✅ Nova imagem adicionada! Ao salvar, ela será vinculada ao produto.");
+      };
+      leitor.readAsDataURL(arquivo);
+    });
+  }
 
-  linha.querySelector(".salvar").addEventListener("click", async () => {
-    const atualizado = {
-      nome: linha.querySelector("td:nth-child(3) input").value.trim(),
-      descricao: linha.querySelector("td:nth-child(4) input").value.trim(),
-      categoria: linha.querySelector("td:nth-child(5) select").value,
-      custo: parseFloat(linha.querySelector("td:nth-child(6) input").value) || 0,
-      margem: parseFloat(linha.querySelector("td:nth-child(7) input").value) || 0,
-      preco: parseFloat(linha.querySelector("td:nth-child(8) input").value) || 0,
-      estoque: parseInt(linha.querySelector("td:nth-child(9) input").value) || 0,
-      imagens: novasImagens,
-    };
+  const btnCancelar = linha.querySelector(".cancelar");
+  if (btnCancelar) {
+    btnCancelar.addEventListener("click", carregarProdutos);
+  }
 
-    try {
-      const r = await fetch(`/produtos/${produto.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(atualizado),
-      });
-      if (!r.ok) throw new Error("Erro ao atualizar produto");
-      alert("✅ Produto atualizado com sucesso!");
-      carregarProdutos();
-    } catch (e) {
-      console.error(e);
-      alert("❌ Falha ao atualizar produto.");
-    }
-  });
+  const btnSalvarInline = linha.querySelector(".salvar");
+  if (btnSalvarInline) {
+    btnSalvarInline.addEventListener("click", async () => {
+      const nomeNovo = linha.querySelector(".inp-nome")?.value.trim() || produto.nome;
+      const descNova = linha.querySelector(".inp-desc")?.value.trim() || produto.descricao || "";
+      const catNova = linha.querySelector(".inp-cat")?.value || produto.categoria || "";
+      const custoNovo = parseFloat(linha.querySelector(".inp-custo")?.value);
+      const precoNovo = parseFloat(linha.querySelector(".inp-preco")?.value);
+      const margemNovaCampo = linha.querySelector(".inp-margem")?.value;
+      let margemNova = parseFloat(margemNovaCampo);
+
+      const estoqueNovo = parseInt(
+        linha.querySelector(".inp-estoque")?.value
+      );
+
+      const custoOk = isNaN(custoNovo) ? produto.custo || 0 : custoNovo;
+      const precoOk = isNaN(precoNovo) ? produto.preco || 0 : precoNovo;
+
+      if (isNaN(margemNova)) {
+        if (custoOk > 0 && precoOk > 0) {
+          margemNova = ((precoOk - custoOk) / custoOk) * 100;
+        } else {
+          margemNova = produto.margem || 0;
+        }
+      }
+
+      const payload = {
+        nome: nomeNovo,
+        descricao: descNova,
+        categoria: catNova,
+        custo: custoOk,
+        preco: precoOk,
+        margem: margemNova,
+        estoque: isNaN(estoqueNovo) ? produto.estoque || 0 : estoqueNovo,
+        imagens: novasImagens, // backend /produtos PUT já sabe lidar
+      };
+
+      try {
+        const r = await fetch(`${API_PRODUTOS}/${produto.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!r.ok) throw new Error("Erro ao atualizar produto");
+        alert("✅ Produto atualizado com sucesso!");
+        carregarProdutos();
+      } catch (e) {
+        console.error(e);
+        alert("❌ Falha ao atualizar produto.");
+      }
+    });
+  }
 }
 
-// ============================================================
+// =============================
 // 🗑️ Excluir produto
-// ============================================================
+// =============================
 async function excluirProduto(id, linha) {
   if (!confirm("Tem certeza que deseja excluir este produto?")) return;
+
   try {
-    const r = await fetch(`/produtos/${id}`, { method: "DELETE" });
+    const r = await fetch(`${API_PRODUTOS}/${id}`, { method: "DELETE" });
     const js = await r.json();
+
     if (js && js.sucesso) {
-      linha.remove();
+      if (linha) linha.remove();
       alert("🗑️ Produto excluído com sucesso!");
     } else {
       alert("❌ Erro ao excluir produto.");
@@ -363,11 +455,10 @@ async function excluirProduto(id, linha) {
   }
 }
 
-// ============================================================
+// =============================
 // 🚀 Inicialização
-// ============================================================
+// =============================
 document.addEventListener("DOMContentLoaded", carregarProdutos);
-
 
 
 

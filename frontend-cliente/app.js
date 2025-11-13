@@ -1,6 +1,6 @@
 // ============================================================
 // TecNorte • Loja - Vitrine pública (filtros, busca e modal)
-// Mantém compatibilidade com o backend atual /produtos
+// Compatível com backend /produtos atual
 // ============================================================
 
 const grid = document.getElementById("gridProdutos");
@@ -40,48 +40,33 @@ function formatarMoeda(v) {
   return "R$ " + n.toFixed(2);
 }
 
-// ✅ ETAPA 4: normalização de imagens mais inteligente
 function normalizarImagens(produto) {
   if (!produto) return [];
 
-  // 1) Se já for array, filtra vazios
+  // Se backend já manda array (caso atual)
   if (Array.isArray(produto.imagens)) {
     return produto.imagens.filter(Boolean);
   }
 
-  // 2) Se for string
+  // Se for string JSON
   if (typeof produto.imagens === "string" && produto.imagens.trim() !== "") {
-    const texto = produto.imagens.trim();
-
-    // 2.1) Se começar com data:image, é uma ÚNICA imagem base64
-    if (texto.startsWith("data:image")) {
-      return [texto];
-    }
-
-    // 2.2) Se parecer JSON (começa com [ e termina com ])
-    if (texto.startsWith("[") && texto.endsWith("]")) {
-      try {
-        const arr = JSON.parse(texto);
-        if (Array.isArray(arr)) {
-          return arr.filter(Boolean);
-        }
-      } catch (_) {
-        // se quebrar, continua tentando outras opções
-      }
+    try {
+      const arr = JSON.parse(produto.imagens);
+      if (Array.isArray(arr)) return arr.filter(Boolean);
+    } catch {
+      // ignora
     }
   }
 
-  // 3) Campos individuais (migrados ou antigos)
-  if (produto.foto1 || produto.foto2 || produto.foto3) {
-    return [produto.foto1, produto.foto2, produto.foto3].filter(Boolean);
-  }
+  // Campos individuais
+  const fotos = [produto.foto1, produto.foto2, produto.foto3].filter(
+    (v) => typeof v === "string" && v.trim() !== ""
+  );
+  if (fotos.length) return fotos;
 
-  // 4) Campo único "imagem" (caminho ou base64)
-  if (produto.imagem && typeof produto.imagem === "string") {
-    return [produto.imagem];
-  }
+  // Campo único
+  if (produto.imagem) return [produto.imagem];
 
-  // 5) Se nada funcionar → sem imagem
   return [];
 }
 
@@ -92,6 +77,8 @@ function tituloCategoria(cat) {
 
 // ------- Renderização dos produtos -------
 function renderGrid(lista) {
+  if (!grid || !msgVazia) return;
+
   grid.innerHTML = "";
   if (!lista || lista.length === 0) {
     msgVazia.style.display = "block";
@@ -125,13 +112,11 @@ function renderGrid(lista) {
       </div>
     `;
 
-    // Ações de clique
-    card
-      .querySelector('[data-action="ver"]')
-      .addEventListener("click", () => abrirModal(p));
-    card
-      .querySelector('[data-action="comprar"]')
-      .addEventListener("click", () => comprar(p));
+    const btnVer = card.querySelector('[data-action="ver"]');
+    const btnComprar = card.querySelector('[data-action="comprar"]');
+
+    if (btnVer) btnVer.addEventListener("click", () => abrirModal(p));
+    if (btnComprar) btnComprar.addEventListener("click", () => comprar(p));
 
     frag.appendChild(card);
   });
@@ -141,6 +126,8 @@ function renderGrid(lista) {
 
 // ------- Modal -------
 function abrirModal(produto) {
+  if (!modal || !modalImagem || !modalThumbs || !modalNome || !modalDesc || !modalPreco || !modalComprar) return;
+
   const imgs = normalizarImagens(produto);
   const primeira = imgs[0] || PLACEHOLDER;
 
@@ -159,9 +146,7 @@ function abrirModal(produto) {
     if (idx === 0) t.classList.add("is-active");
     t.addEventListener("click", () => {
       modalImagem.src = src;
-      modalThumbs
-        .querySelectorAll("img")
-        .forEach((im) => im.classList.remove("is-active"));
+      modalThumbs.querySelectorAll("img").forEach((im) => im.classList.remove("is-active"));
       t.classList.add("is-active");
     });
     modalThumbs.appendChild(t);
@@ -172,21 +157,28 @@ function abrirModal(produto) {
 }
 
 function fecharModal() {
+  if (!modal) return;
   modal.setAttribute("aria-hidden", "true");
 }
 
-modalFechar.addEventListener("click", fecharModal);
-modal.addEventListener("click", (e) => {
-  if (e.target === modal) fecharModal();
-});
+if (modalFechar) {
+  modalFechar.addEventListener("click", fecharModal);
+}
+
+if (modal) {
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) fecharModal();
+  });
+}
+
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") fecharModal();
 });
 
 // ------- Filtros & Busca -------
 function aplicarFiltros() {
-  const texto = (campoBusca.value || "").toLowerCase().trim();
-  const cat = filtroCategoria.value || "";
+  const texto = (campoBusca?.value || "").toLowerCase().trim();
+  const cat = filtroCategoria?.value || "";
 
   produtosFiltrados = produtos.filter((p) => {
     const passaCat = cat ? (p.categoria || "") === cat : true;
@@ -198,26 +190,24 @@ function aplicarFiltros() {
   renderGrid(produtosFiltrados);
 }
 
-campoBusca.addEventListener("input", aplicarFiltros);
-filtroCategoria.addEventListener("change", aplicarFiltros);
+if (campoBusca) campoBusca.addEventListener("input", aplicarFiltros);
+if (filtroCategoria) filtroCategoria.addEventListener("change", aplicarFiltros);
 
 // ------- Carregar produtos do backend -------
 async function carregarProdutos() {
+  if (!grid || !msgVazia) return;
+
   try {
     const resp = await fetch("/produtos");
     const data = await resp.json();
 
     produtos = (data || []).map((p) => {
       let preco = Number(p.preco);
-      if (
-        (preco === null || isNaN(preco)) &&
-        p.custo != null &&
-        p.margem != null
-      ) {
-        preco = Number(
-          (Number(p.custo) * (1 + Number(p.margem) / 100)).toFixed(2)
-        );
+
+      if ((preco === null || isNaN(preco)) && p.custo != null && p.margem != null) {
+        preco = Number((Number(p.custo) * (1 + Number(p.margem) / 100)).toFixed(2));
       }
+
       return { ...p, preco };
     });
 
@@ -226,36 +216,28 @@ async function carregarProdutos() {
     console.error("Erro ao carregar produtos:", e);
     grid.innerHTML = "";
     msgVazia.style.display = "block";
-    msgVazia.textContent =
-      "❌ Não foi possível carregar os produtos. Verifique o servidor.";
+    msgVazia.textContent = "❌ Não foi possível carregar os produtos. Verifique o servidor.";
   }
 }
 
-// ------- Comprar (agora funcional) -------
+// ------- Comprar (simples, usando localStorage) -------
 function comprar(produto) {
-  // Recupera o carrinho atual ou cria um novo
   let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
 
-  // Adiciona o produto selecionado
   carrinho.push({
     id: produto.id,
     nome: produto.nome,
     preco: produto.preco,
   });
 
-  // Atualiza o total
   const totalAtual = carrinho
     .reduce((acc, p) => acc + Number(p.preco || 0), 0)
     .toFixed(2);
 
-  // Salva no localStorage
   localStorage.setItem("carrinho", JSON.stringify(carrinho));
   localStorage.setItem("totalCarrinho", totalAtual);
 
-  // Mostra confirmação e redireciona
-  alert(
-    `🛒 '${produto.nome}' adicionado ao carrinho com sucesso! Indo para o checkout...`
-  );
+  alert(`🛒 '${produto.nome}' adicionado ao carrinho! Indo para o checkout...`);
   window.location.href = "/frontend-cliente/checkout.html";
 }
 
