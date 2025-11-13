@@ -3,8 +3,16 @@
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 
-// Caminho do arquivo de banco — agora persistente no Render
-const dbPath = path.resolve(process.cwd(), 'database.sqlite');
+// ===============================
+// ✅ Correção: banco persistente no Render
+// ===============================
+const persistentDir =
+  process.env.RENDER ? '/var/data' : process.cwd();
+
+// Caminho final do banco (persistente no Render, local no PC)
+const dbPath = path.join(persistentDir, 'database.sqlite');
+
+console.log("📦 Banco de dados em:", dbPath);
 
 // Cria conexão com o banco (sqlite3 usa serialize para garantir ordem)
 const db = new sqlite3.Database(dbPath);
@@ -179,4 +187,5 @@ db.serialize(() => {
 // 🧩 Exporta o banco para uso nas rotas
 // ============================================================
 module.exports = db;
+
 
