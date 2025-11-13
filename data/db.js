@@ -27,6 +27,7 @@ console.log("📦 Banco de dados em:", dbPath);
 const db = new sqlite3.Database(dbPath);
 
 db.serialize(() => {
+
   // ============================================================
   // 🧩 Criação da tabela principal (se não existir)
   // ============================================================
@@ -36,14 +37,14 @@ db.serialize(() => {
       nome TEXT NOT NULL,
       preco REAL NOT NULL,
       descricao TEXT,
-      categoria TEXT,            -- ✅ nova coluna de categoria
+      categoria TEXT,            
       custo REAL DEFAULT 0,
       margem REAL DEFAULT 0,
       imagem TEXT,
-      imagens TEXT,              -- compatível com versões antigas
-      foto1 TEXT,                -- ✅ nova foto 1
-      foto2 TEXT,                -- ✅ nova foto 2
-      foto3 TEXT,                -- ✅ nova foto 3
+      imagens TEXT,              
+      foto1 TEXT,                
+      foto2 TEXT,                
+      foto3 TEXT,                
       estoque INTEGER DEFAULT 0
     )
   `);
@@ -56,7 +57,6 @@ db.serialize(() => {
       if (err) return console.error(err);
 
       const has = cols.some(c => c.name === name);
-
       if (!has) {
         db.run(`ALTER TABLE produtos ADD COLUMN ${name} ${defSql}`, () => {
           console.log(`🧩 Coluna adicionada: ${name}`);
@@ -77,6 +77,24 @@ db.serialize(() => {
   ensureColumn('foto2', 'TEXT');
   ensureColumn('foto3', 'TEXT');
   ensureColumn('estoque', 'INTEGER DEFAULT 0');
+
+  // ============================================================
+  // 🧹 LIMPEZA DE REGISTROS INVÁLIDOS (LINHA “undefined”)
+  // ============================================================
+  db.run(`
+    DELETE FROM produtos
+    WHERE
+      nome IS NULL
+      OR TRIM(nome) = ''
+      OR nome = 'undefined'
+      OR preco IS NULL
+  `, (err) => {
+    if (err) {
+      console.error('⚠️ Erro ao limpar produtos inválidos:', err);
+    } else {
+      console.log('🧹 Limpeza de produtos inválidos concluída.');
+    }
+  });
 
   // ============================================================
   // 🔁 Migração automática: imagem antiga → imagens → fotos individuais
@@ -111,7 +129,7 @@ db.serialize(() => {
           foto1 = foto1 || arr[0] || null;
           foto2 = foto2 || arr[1] || null;
           foto3 = foto3 || arr[2] || null;
-        } catch (e) { }
+        } catch (e) {}
       }
 
       update.run(imagensJSON || null, foto1, foto2, foto3, p.id);
@@ -160,7 +178,10 @@ db.serialize(() => {
       ];
 
       const insert = db.prepare(`
-        INSERT INTO produtos (nome, preco, descricao, categoria, custo, margem, imagem, imagens, foto1, foto2, foto3, estoque)
+        INSERT INTO produtos (
+          nome, preco, descricao, categoria, custo, margem,
+          imagem, imagens, foto1, foto2, foto3, estoque
+        )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
@@ -190,10 +211,12 @@ db.serialize(() => {
       console.log('📦 Produtos já existentes no banco.');
     }
   });
+
 });
 
 // ============================================================
 // 🧩 Exporta o banco para uso nas rotas
 // ============================================================
 module.exports = db;
+
 
