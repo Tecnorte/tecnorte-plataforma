@@ -1,6 +1,7 @@
 // ✅ BANCO DE DADOS TECNORTE 3.3 — agora com suporte à coluna "categoria"
 
 const path = require('path');
+const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 
 // ===============================
@@ -8,6 +9,12 @@ const sqlite3 = require('sqlite3').verbose();
 // ===============================
 const persistentDir =
   process.env.RENDER ? '/var/data' : process.cwd();
+
+// 📁 Garante que a pasta exista no Render
+if (!fs.existsSync(persistentDir)) {
+  console.log("📁 Criando pasta persistente:", persistentDir);
+  fs.mkdirSync(persistentDir, { recursive: true });
+}
 
 // Caminho final do banco (persistente no Render, local no PC)
 const dbPath = path.join(persistentDir, 'database.sqlite');
@@ -102,7 +109,7 @@ db.serialize(() => {
           foto1 = foto1 || arr[0] || null;
           foto2 = foto2 || arr[1] || null;
           foto3 = foto3 || arr[2] || null;
-        } catch (e) {}
+        } catch (e) { }
       }
 
       update.run(imagensJSON || null, foto1, foto2, foto3, p.id);
@@ -187,5 +194,3 @@ db.serialize(() => {
 // 🧩 Exporta o banco para uso nas rotas
 // ============================================================
 module.exports = db;
-
-
