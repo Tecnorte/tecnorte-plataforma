@@ -5,10 +5,12 @@ const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 
 // ===============================
-// ✅ Correção: banco persistente no Render
+// ✅ Correção: banco persistente no Render (compatível com plano FREE)
 // ===============================
+
+// ❗ Render Free NÃO permite /var/data → usamos pasta interna ao projeto
 const persistentDir =
-  process.env.RENDER ? '/var/data' : process.cwd();
+  process.env.RENDER ? path.join(process.cwd(), 'data') : process.cwd();
 
 // 📁 Garante que a pasta exista no Render
 if (!fs.existsSync(persistentDir)) {
@@ -194,3 +196,4 @@ db.serialize(() => {
 // 🧩 Exporta o banco para uso nas rotas
 // ============================================================
 module.exports = db;
+
