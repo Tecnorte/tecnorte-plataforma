@@ -21,15 +21,28 @@ if (!fs.existsSync(persistentDir)) {
 // Caminho final do banco (persistente no Render, local no PC)
 const dbPath = path.join(persistentDir, 'database.sqlite');
 
+// ===============================
+// 🧠 NOVO: detecção de banco corrompido
+// ===============================
+if (fs.existsSync(dbPath)) {
+  const content = fs.readFileSync(dbPath);
+
+  // Se o arquivo SQLite tiver menos de 100KB, é provável que esteja vazio/corrompido
+  if (content.length < 5000) {
+    console.log("⚠️ Banco corrompido detectado → removendo...");
+    fs.unlinkSync(dbPath);
+  }
+}
+
 console.log("📦 Banco de dados em:", dbPath);
 
-// Cria conexão com o banco (sqlite3 usa serialize para garantir ordem)
+// Cria conexão com o banco (sqlite3 usa serialize)
 const db = new sqlite3.Database(dbPath);
 
 db.serialize(() => {
 
   // ============================================================
-  // 🧩 Criação da tabela principal (se não existir)
+  // 🧩 Criação da tabela principal
   // ============================================================
   db.run(`
     CREATE TABLE IF NOT EXISTS produtos (
@@ -37,37 +50,34 @@ db.serialize(() => {
       nome TEXT NOT NULL,
       preco REAL NOT NULL,
       descricao TEXT,
-      categoria TEXT,            
+      categoria TEXT,
       custo REAL DEFAULT 0,
       margem REAL DEFAULT 0,
       imagem TEXT,
-      imagens TEXT,              
-      foto1 TEXT,                
-      foto2 TEXT,                
-      foto3 TEXT,                
+      imagens TEXT,
+      foto1 TEXT,
+      foto2 TEXT,
+      foto3 TEXT,
       estoque INTEGER DEFAULT 0
     )
   `);
 
   // ============================================================
-  // 🧠 Função para garantir colunas extras (migração segura)
+  // 🧠 Garante colunas extras
   // ============================================================
   function ensureColumn(name, defSql) {
     db.all(`PRAGMA table_info(produtos)`, (err, cols) => {
-      if (err) return console.error(err);
+      if (err) return;
 
       const has = cols.some(c => c.name === name);
+
       if (!has) {
-        db.run(`ALTER TABLE produtos ADD COLUMN ${name} ${defSql}`, () => {
-          console.log(`🧩 Coluna adicionada: ${name}`);
-        });
+        db.run(`ALTER TABLE produtos ADD COLUMN ${name} ${defSql}`);
+        console.log(`🧩 Coluna adicionada: ${name}`);
       }
     });
   }
 
-  // ============================================================
-  // 🧩 Garante que todas as colunas existam (para versões antigas)
-  // ============================================================
   ensureColumn('categoria', 'TEXT');
   ensureColumn('custo', 'REAL DEFAULT 0');
   ensureColumn('margem', 'REAL DEFAULT 0');
@@ -79,31 +89,37 @@ db.serialize(() => {
   ensureColumn('estoque', 'INTEGER DEFAULT 0');
 
   // ============================================================
-  // 🧹 LIMPEZA DE REGISTROS INVÁLIDOS (LINHA “undefined”)
+  // 🧠 NOVO: checar se existe registro inválido
   // ============================================================
-  db.run(`
-    DELETE FROM produtos
-    WHERE
-      nome IS NULL
-      OR TRIM(nome) = ''
-      OR nome = 'undefined'
-      OR preco IS NULL
-  `, (err) => {
-    if (err) {
-      console.error('⚠️ Erro ao limpar produtos inválidos:', err);
-    } else {
-      console.log('🧹 Limpeza de produtos inválidos concluída.');
+  db.all(`SELECT * FROM produtos`, (err, rows) => {
+    if (!err && rows && rows.length > 0) {
+      const invalido = rows.find(r =>
+        !r.nome ||
+        r.nome === "undefined" ||
+        r.preco === null ||
+        r.preco === undefined
+      );
+
+      if (invalido) {
+        console.log("⚠️ Registro inválido detectado → recriando banco totalmente");
+
+        // Fecha o DB antes de remover
+        db.close(() => {
+          fs.unlinkSync(dbPath);
+          console.log("🧹 Banco antigo removido.");
+
+          // Reinicia automaticamente
+          process.exit(1);
+        });
+      }
     }
   });
 
   // ============================================================
-  // 🔁 Migração automática: imagem antiga → imagens → fotos individuais
+  // 🔁 Migração automática de imagens
   // ============================================================
-  db.all('SELECT id, imagem, imagens, foto1, foto2, foto3 FROM produtos', (err, produtos) => {
-    if (err) {
-      console.error('⚠️ Erro ao migrar imagens:', err);
-      return;
-    }
+  db.all('SELECT * FROM produtos', (err, produtos) => {
+    if (err) return;
 
     const update = db.prepare(`
       UPDATE produtos
@@ -120,16 +136,6 @@ db.serialize(() => {
       if (p.imagem && (!p.imagens || p.imagens === '')) {
         imagensJSON = JSON.stringify([p.imagem]);
         foto1 = p.imagem;
-        console.log(`🔄 Migrada imagem única → fotos do produto ID ${p.id}`);
-      }
-
-      if (imagensJSON && (!foto1 || !foto2 || !foto3)) {
-        try {
-          const arr = JSON.parse(imagensJSON);
-          foto1 = foto1 || arr[0] || null;
-          foto2 = foto2 || arr[1] || null;
-          foto3 = foto3 || arr[2] || null;
-        } catch (e) {}
       }
 
       update.run(imagensJSON || null, foto1, foto2, foto3, p.id);
@@ -139,13 +145,11 @@ db.serialize(() => {
   });
 
   // ============================================================
-  // 📦 Inserir produtos iniciais se o banco estiver vazio
+  // 📦 Inserir produtos iniciais
   // ============================================================
   db.get('SELECT COUNT(*) AS total FROM produtos', (err, row) => {
-    if (err) return console.error(err);
-
     if (row.total === 0) {
-      console.log('🆕 Inserindo produtos iniciais...');
+      console.log("🆕 Inserindo produtos iniciais...");
 
       const produtosIniciais = [
         {
@@ -178,10 +182,8 @@ db.serialize(() => {
       ];
 
       const insert = db.prepare(`
-        INSERT INTO produtos (
-          nome, preco, descricao, categoria, custo, margem,
-          imagem, imagens, foto1, foto2, foto3, estoque
-        )
+        INSERT INTO produtos
+        (nome, preco, descricao, categoria, custo, margem, imagem, imagens, foto1, foto2, foto3, estoque)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
@@ -206,9 +208,6 @@ db.serialize(() => {
       }
 
       insert.finalize();
-      console.log('✅ Produtos iniciais adicionados com sucesso!');
-    } else {
-      console.log('📦 Produtos já existentes no banco.');
     }
   });
 
@@ -218,5 +217,6 @@ db.serialize(() => {
 // 🧩 Exporta o banco para uso nas rotas
 // ============================================================
 module.exports = db;
+
 
 
