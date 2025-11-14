@@ -1,122 +1,141 @@
 /* ===============================
-   BASE GERAL
+   BASE GERAL — Layout Premium
 =================================*/
 body {
     margin: 0;
     padding: 0;
     font-family: 'Segoe UI', sans-serif;
-    background: #f2f6fb; /* FUNDO CLARO APROVADO */
+    background: #eef3f8; /* Fundo claro premium */
     color: #0A2A43;
+    overflow-x: hidden;
 }
 
 /* ===============================
-   HEADER
+   HEADER — Premium Azul TecNorte
 =================================*/
 .topo {
     width: 100%;
-    background: linear-gradient(90deg, #003366, #0055a5); /* Azul TecNorte */
+    background: linear-gradient(90deg, #002e5f, #005fb8);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 30px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+    padding: 18px 40px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .logo {
-    height: 55px;
+    height: 68px;
+    object-fit: contain;
 }
 
 /* LINKS DO TOPO */
 .topo nav a {
     color: #ffffff;
-    margin-left: 20px;
+    margin-left: 28px;
     text-decoration: none;
     font-weight: 600;
-    font-size: 16px;
+    font-size: 17px;
+    letter-spacing: 0.5px;
 }
 
 .topo nav a:hover {
-    text-decoration: underline;
+    opacity: 0.8;
 }
 
 /* ===============================
-   FILTROS
+   FILTROS — Mais elegantes
 =================================*/
 .filtros {
     width: 100%;
-    margin: 20px auto;
-    max-width: 900px;
+    margin: 30px auto 10px;
+    max-width: 950px;
     display: flex;
     justify-content: center;
-    gap: 12px;
+    gap: 15px;
 }
 
 .filtros input,
 .filtros select {
-    padding: 12px;
+    padding: 14px;
     font-size: 15px;
-    border-radius: 8px;
-    border: 1px solid #d0d7e2;
+    border-radius: 12px;
+    border: 1px solid #c9d4e3;
     background: white;
     color: #003366;
-    width: 260px;
+    width: 300px;
+    box-shadow: 2px 4px 10px rgba(0,0,0,0.05);
+}
+
+.filtros input:focus,
+.filtros select:focus {
+    outline: none;
+    border-color: #00A8FF;
 }
 
 /* ===============================
-   GRID DE PRODUTOS
+   GRID DE PRODUTOS — Central Premium
 =================================*/
 .grid {
     display: grid;
     justify-content: center;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 25px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 35px;
     padding: 20px;
-    max-width: 1200px;
+    max-width: 1300px;
     margin: auto;
 }
 
 /* ===============================
-   CARD DE PRODUTO
+   CARD DE PRODUTO — Premium
 =================================*/
 .card-produto {
     background: #ffffff;
-    border-radius: 16px;
-    padding: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-    transition: transform .2s, box-shadow .2s;
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.09);
+    transition: transform .25s, box-shadow .25s;
+    position: relative;
+    border: 1px solid #e3e9f0;
 }
 
 .card-produto:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    transform: translateY(-8px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.18);
 }
 
 /* FOTO DO PRODUTO */
 .card-produto img {
     width: 100%;
-    border-radius: 10px;
-    height: 180px;
+    border-radius: 14px;
+    height: 220px;
     object-fit: cover;
+    background: #f8fbff;
 }
 
 /* NOME */
 .card-produto h3 {
-    margin: 10px 0 5px;
+    margin: 12px 0 6px;
     color: #003366;
+    font-size: 20px;
+    font-weight: 700;
 }
 
 /* CATEGORIA */
 .card-produto .cat {
-    font-size: 13px;
+    font-size: 14px;
     color: #6c7a8a;
+    margin-bottom: 4px;
 }
 
 /* PREÇO */
 .card-produto .preco {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: bold;
     color: #00A8FF;
-    margin: 10px 0;
+    margin: 14px 0;
 }
 
 /* PROMOÇÃO */
@@ -124,36 +143,45 @@ body {
     background: #FF9900;
     color: white;
     font-weight: bold;
-    padding: 3px 10px;
-    border-radius: 8px;
-    font-size: 12px;
+    padding: 4px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.25);
 }
 
-/* BOTÕES */
+/* ===============================
+   BOTÕES — Estilo App Premium
+=================================*/
 .botoes {
-    margin-top: 15px;
+    margin-top: 18px;
     display: flex;
     justify-content: space-between;
+    gap: 12px;
 }
 
 .btn-ver,
 .btn-comprar {
-    padding: 10px 15px;
-    border-radius: 10px;
-    font-weight: 600;
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-weight: 700;
     text-align: center;
     cursor: pointer;
-    width: 48%;
+    width: 50%;
+    font-size: 15px;
+    letter-spacing: 0.3px;
 }
 
 /* BOTÃO VER MAIS */
 .btn-ver {
     background: #e3f3ff;
-    color: #0066aa;
+    color: #005d99;
     border: 1px solid #bcdcff;
 }
 .btn-ver:hover {
-    background: #d8edff;
+    background: #d4ecff;
 }
 
 /* BOTÃO COMPRAR */
@@ -161,6 +189,7 @@ body {
     background: #00A8FF;
     color: white;
     border: none;
+    box-shadow: 0 4px 10px rgba(0,168,255,0.25);
 }
 .btn-comprar:hover {
     background: #008ed7;
