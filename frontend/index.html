@@ -1,105 +1,84 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel Administrativo - TecNorte</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel Administrativo - TecNorte</title>
 
-  <!-- 🧩 Importa o tema TecNorte -->
-  <link rel="stylesheet" href="/style.css">
-
-  <!-- Ícone opcional -->
-  <link rel="icon" href="/img/logo-tecnorte.jpg" type="image/jpeg">
+    <!-- CSS ADMIN -->
+    <link rel="stylesheet" href="/frontend/style.css" />
 </head>
+
 <body>
 
-  <!-- ================== CABEÇALHO TECNORTE ================== -->
-  <header class="header-tecnorte">
-    <div class="logo-area">
-      <img src="/img/logo-tecnorte.jpg" alt="TecNorte Informática" class="logo-tecnorte" />
-      <h1>Painel Administrativo</h1>
-    </div>
-    <div class="versao-sistema">
-      <a href="/" class="btn-top">🏬 Loja</a>
-      <a href="/admin" class="btn-top">⟳ Atualizar</a>
-    </div>
-  </header>
+    <header class="topo">
+        <img src="/frontend/img/logo.png" class="logo" />
 
-  <!-- ================== CONTAINER PRINCIPAL ================== -->
-  <div class="container">
+        <nav>
+            <a href="/">🏬 Loja</a>
+            <a href="/admin">🔄 Atualizar</a>
+        </nav>
+    </header>
 
-    <!-- ================== FORMULÁRIO ================== -->
-    <div class="form-produto">
-      <input type="text" id="nome" placeholder="Nome do produto" />
-      <input type="number" id="custo" placeholder="Custo" />
-      <input type="number" id="preco" placeholder="Preço" />
-      <input type="number" id="margem" placeholder="Margem (%)" readonly />
-      <input type="number" id="estoque" placeholder="Estoque" />
+    <h1>Painel Administrativo</h1>
 
-      <!-- 🏷️ Categoria -->
-      <label for="categoria">Categoria:</label>
-      <select id="categoria">
-        <option value="">Selecione a categoria</option>
-        <option value="promocao">🔥 Promoção do dia</option>
-        <option value="informatica">💻 Informática</option>
-        <option value="diversos">🎧 Diversos</option>
-        <option value="acessorios">🔌 Acessórios</option>
-        <option value="carregadores">⚡ Carregadores</option>
-        <option value="notebooks">💼 Notebooks</option>
-      </select>
+    <section class="form-produto">
+        <input type="text" id="nome" placeholder="Nome do produto">
+        <input type="number" id="custo" placeholder="Custo">
+        <input type="number" id="preco" placeholder="Preço">
+        <input type="number" id="margem" placeholder="Margem (%)" readonly>
+        <input type="number" id="estoque" placeholder="Estoque">
 
-      <!-- 🔹 Área de upload individual de imagens -->
-      <div class="imagens-produto">
-        <label>Foto 1:</label>
-        <input type="file" id="foto1" accept="image/*" />
-        <img id="preview1" style="display:none;width:100px;height:100px;margin-top:5px;border-radius:8px;border:1px solid #00bfff;" />
-        <button type="button" id="remove1" class="btn-remove" style="display:none;">❌ Remover</button>
+        <label>Categoria</label>
+        <select id="categoria">
+            <option value="">Selecione</option>
+            <option value="promocao">Promoção</option>
+            <option value="informatica">Informática</option>
+            <option value="diversos">Diversos</option>
+            <option value="acessorios">Acessórios</option>
+            <option value="carregadores">Carregadores</option>
+            <option value="notebooks">Notebooks</option>
+        </select>
 
-        <label>Foto 2:</label>
-        <input type="file" id="foto2" accept="image/*" />
-        <img id="preview2" style="display:none;width:100px;height:100px;margin-top:5px;border-radius:8px;border:1px solid #00bfff;" />
-        <button type="button" id="remove2" class="btn-remove" style="display:none;">❌ Remover</button>
+        <p>Foto 1:</p>
+        <input id="foto1" type="file">
+        <img id="preview1" style="display:none;width:80px">
 
-        <label>Foto 3:</label>
-        <input type="file" id="foto3" accept="image/*" />
-        <img id="preview3" style="display:none;width:100px;height:100px;margin-top:5px;border-radius:8px;border:1px solid #00bfff;" />
-        <button type="button" id="remove3" class="btn-remove" style="display:none;">❌ Remover</button>
-      </div>
+        <p>Foto 2:</p>
+        <input id="foto2" type="file">
+        <img id="preview2" style="display:none;width:80px">
 
-      <textarea id="descricao" placeholder="Descrição"></textarea>
+        <p>Foto 3:</p>
+        <input id="foto3" type="file">
+        <img id="preview3" style="display:none;width:80px">
 
-      <!-- 🔹 Botão para novo cadastro -->
-      <button id="btnNovo" class="btn-novo">🆕 Novo Produto</button>
+        <textarea id="descricao" placeholder="Descrição"></textarea>
 
-      <!-- 🔹 Botão principal -->
-      <button id="btnSalvar" class="btn-salvar">💾 Salvar Produto</button>
-    </div>
+        <button id="btnNovo">Novo Produto</button>
+        <button id="btnSalvar">Salvar Produto</button>
+    </section>
 
-    <!-- ================== TABELA ================== -->
-    <div class="tabela-container">
-      <table>
+    <table>
         <thead>
-          <tr>
-            <th>ID</th>
-            <th>Imagem</th>
-            <th>Nome</th>
-            <th>Descrição</th>
-            <th>Categoria</th>
-            <th>Custo</th>
-            <th>Margem (%)</th>
-            <th>Preço</th>
-            <th>Estoque</th>
-            <th>Ações</th>
-          </tr>
+            <tr>
+                <th>ID</th>
+                <th>Imagem</th>
+                <th>Nome</th>
+                <th>Descrição</th>
+                <th>Categoria</th>
+                <th>Custo</th>
+                <th>Margem</th>
+                <th>Preço</th>
+                <th>Estoque</th>
+                <th>Ações</th>
+            </tr>
         </thead>
+
         <tbody id="listaProdutos"></tbody>
-      </table>
-    </div>
+    </table>
 
-  </div>
-
-  <!-- ================== SCRIPT PRINCIPAL ================== -->
-  <script src="/app.js"></script>
-
+    <!-- JS ADMIN -->
+    <script src="/frontend/app.js"></script>
 </body>
 </html>
+

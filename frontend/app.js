@@ -4,9 +4,12 @@
 // ============================================================
 
 // =============================
-// 🔗 Config API
+// 🔗 API dinâmica (LOCAL + RENDER)
 // =============================
-const API_PRODUTOS = "/produtos";
+const API_PRODUTOS =
+  location.hostname === "localhost"
+    ? "http://localhost:3000/produtos"
+    : "https://tecnorte-plataforma-backend.onrender.com/produtos";
 
 // =============================
 // 🧮 Cálculo automático da margem (form principal)
@@ -102,32 +105,25 @@ if (btnNovo) {
 // =============================
 const tabelaProdutos = document.getElementById("listaProdutos");
 
-// Normaliza campo de imagens vindo do backend
 function normalizarImagens(produto) {
   if (!produto) return [];
 
-  // Se backend já mandou array, só usa
   if (Array.isArray(produto.imagens)) {
     return produto.imagens.filter(Boolean);
   }
 
-  // Se veio como string JSON
   if (typeof produto.imagens === "string" && produto.imagens.trim() !== "") {
     try {
       const arr = JSON.parse(produto.imagens);
       if (Array.isArray(arr)) return arr.filter(Boolean);
-    } catch {
-      // ignora
-    }
+    } catch {}
   }
 
-  // Se vieram fotos individuais
   const fotos = [produto.foto1, produto.foto2, produto.foto3].filter(
     (v) => typeof v === "string" && v.trim() !== ""
   );
   if (fotos.length) return fotos;
 
-  // Fallback pra campo único
   if (produto.imagem) return [produto.imagem];
 
   return [];
@@ -138,7 +134,6 @@ function formatarMoeda(v) {
   return "R$ " + n.toFixed(2);
 }
 
-// Traduz categoria para texto amigável
 function formatarCategoria(cat) {
   const mapa = {
     promocao: "🔥 Promoção do dia",
@@ -152,7 +147,6 @@ function formatarCategoria(cat) {
   return mapa[cat] || cat;
 }
 
-// Renderiza uma linha na tabela
 function renderizarProduto(produto) {
   const imgs = normalizarImagens(produto);
   const imagensHTML = imgs.length
@@ -184,24 +178,15 @@ function renderizarProduto(produto) {
     </td>
   `;
 
-  const btnExcluir = linha.querySelector(".excluir");
-  const btnEditar = linha.querySelector(".editar");
+  linha.querySelector(".excluir").addEventListener("click", () =>
+    excluirProduto(produto.id, linha)
+  );
 
-  if (btnExcluir) {
-    btnExcluir.addEventListener("click", () =>
-      excluirProduto(produto.id, linha)
-    );
-  }
+  linha.querySelector(".editar").addEventListener("click", () =>
+    editarInline(linha, produto)
+  );
 
-  if (btnEditar) {
-    btnEditar.addEventListener("click", () =>
-      editarInline(linha, produto)
-    );
-  }
-
-  if (tabelaProdutos) {
-    tabelaProdutos.appendChild(linha);
-  }
+  tabelaProdutos.appendChild(linha);
 }
 
 // =============================
@@ -225,22 +210,40 @@ async function carregarProdutos() {
 }
 
 // =============================
-// 💾 Salvar produto (form principal)
+// 💾 Salvar produto
 // =============================
 const btnSalvar = document.getElementById("btnSalvar");
 if (btnSalvar) {
   btnSalvar.addEventListener("click", async () => {
     const nome = document.getElementById("nome")?.value.trim();
-    const custo = document.getElementById("custo")?.value.trim();
-    const preco = document.getElementById("preco")?.value.trim();
-    const margem = document.getElementById("margem")?.value.trim();
-    const estoque = document.getElementById("estoque")?.value.trim();
+    const custoStr = document.getElementById("custo")?.value.trim();
+    const precoStr = document.getElementById("preco")?.value.trim();
+    const margemStr = document.getElementById("margem")?.value.trim();
+    const estoqueStr = document.getElementById("estoque")?.value.trim();
     const descricao = document.getElementById("descricao")?.value.trim();
     const categoria = campoCategoria ? campoCategoria.value : "";
 
-    if (!nome || !custo || !preco || !estoque) {
+    if (!nome || !custoStr || !precoStr || !estoqueStr) {
       alert("⚠️ Preencha todos os campos obrigatórios!");
       return;
+    }
+
+    let custo = parseFloat(custoStr.replace(",", "."));
+    let preco = parseFloat(precoStr.replace(",", "."));
+    let margem = parseFloat(margemStr?.replace(",", "."));
+    let estoque = parseInt(estoqueStr);
+
+    if (isNaN(custo) || isNaN(preco) || isNaN(estoque)) {
+      alert("⚠️ Custo, preço e estoque precisam ser numéricos!");
+      return;
+    }
+
+    if (isNaN(margem)) {
+      if (custo > 0 && preco > 0) {
+        margem = ((preco - custo) / custo) * 100;
+      } else {
+        margem = 0;
+      }
     }
 
     const produto = {
@@ -261,25 +264,27 @@ if (btnSalvar) {
         body: JSON.stringify(produto),
       });
 
-      if (!resp.ok) {
-        throw new Error("Erro ao salvar produto");
-      }
+      if (!resp.ok) throw new Error("Erro ao salvar produto");
 
-      const novo = await resp.json();
-      renderizarProduto(novo);
+      const dados = await resp.json();
+      let novoProduto = dados.produto || dados;
+
+      if (!novoProduto || novoProduto.id == null) {
+        await carregarProdutos();
+      } else {
+        renderizarProduto(novoProduto);
+      }
 
       alert("✅ Produto salvo com sucesso!");
 
       const form = document.querySelector(".form-produto");
-      if (form) form.reset();
-      if (campoMargem) campoMargem.value = "";
+      form?.reset();
+      campoMargem.value = "";
       imagensBase64 = [null, null, null];
 
       imagensSlots.forEach(({ preview, remove }) => {
-        const p = document.getElementById(preview);
-        const r = document.getElementById(remove);
-        if (p) p.style.display = "none";
-        if (r) r.style.display = "none";
+        document.getElementById(preview).style.display = "none";
+        document.getElementById(remove).style.display = "none";
       });
     } catch (e) {
       console.error(e);
@@ -289,7 +294,7 @@ if (btnSalvar) {
 }
 
 // =============================
-// ✏️ Editar inline — com atualização de imagens
+// ✏️ Editar inline
 // =============================
 function editarInline(linha, produto) {
   if (linha.classList.contains("editando")) return;
@@ -347,7 +352,6 @@ function editarInline(linha, produto) {
     </td>
   `;
 
-  // Remover imagem existente
   linha.querySelectorAll(".remover-img").forEach((btn) => {
     btn.addEventListener("click", () => {
       const index = parseInt(btn.dataset.index);
@@ -358,79 +362,70 @@ function editarInline(linha, produto) {
     });
   });
 
-  // Adicionar nova imagem
-  const inputNova = linha.querySelector(".nova-imagem");
-  if (inputNova) {
-    inputNova.addEventListener("change", (e) => {
+  linha
+    .querySelector(".nova-imagem")
+    ?.addEventListener("change", (e) => {
       const arquivo = e.target.files[0];
       if (!arquivo) return;
       const leitor = new FileReader();
       leitor.onload = (ev) => {
         novasImagens.push(ev.target.result);
-        alert("✅ Nova imagem adicionada! Ao salvar, ela será vinculada ao produto.");
+        alert("✅ Nova imagem adicionada!");
       };
       leitor.readAsDataURL(arquivo);
     });
-  }
 
-  const btnCancelar = linha.querySelector(".cancelar");
-  if (btnCancelar) {
-    btnCancelar.addEventListener("click", carregarProdutos);
-  }
+  linha
+    .querySelector(".cancelar")
+    ?.addEventListener("click", carregarProdutos);
 
-  const btnSalvarInline = linha.querySelector(".salvar");
-  if (btnSalvarInline) {
-    btnSalvarInline.addEventListener("click", async () => {
-      const nomeNovo = linha.querySelector(".inp-nome")?.value.trim() || produto.nome;
-      const descNova = linha.querySelector(".inp-desc")?.value.trim() || produto.descricao || "";
-      const catNova = linha.querySelector(".inp-cat")?.value || produto.categoria || "";
-      const custoNovo = parseFloat(linha.querySelector(".inp-custo")?.value);
-      const precoNovo = parseFloat(linha.querySelector(".inp-preco")?.value);
-      const margemNovaCampo = linha.querySelector(".inp-margem")?.value;
-      let margemNova = parseFloat(margemNovaCampo);
+  linha.querySelector(".salvar")?.addEventListener("click", async () => {
+    const nomeNovo = linha.querySelector(".inp-nome")?.value.trim() || produto.nome;
+    const descNova = linha.querySelector(".inp-desc")?.value.trim() || produto.descricao || "";
+    const catNova = linha.querySelector(".inp-cat")?.value || produto.categoria || "";
+    const custoNovo = parseFloat(linha.querySelector(".inp-custo")?.value);
+    const precoNovo = parseFloat(linha.querySelector(".inp-preco")?.value);
+    const margemNovaCampo = linha.querySelector(".inp-margem")?.value;
+    let margemNova = parseFloat(margemNovaCampo);
+    const estoqueNovo = parseInt(linha.querySelector(".inp-estoque")?.value);
 
-      const estoqueNovo = parseInt(
-        linha.querySelector(".inp-estoque")?.value
-      );
+    const custoOk = isNaN(custoNovo) ? produto.custo || 0 : custoNovo;
+    const precoOk = isNaN(precoNovo) ? produto.preco || 0 : precoNovo;
 
-      const custoOk = isNaN(custoNovo) ? produto.custo || 0 : custoNovo;
-      const precoOk = isNaN(precoNovo) ? produto.preco || 0 : precoNovo;
-
-      if (isNaN(margemNova)) {
-        if (custoOk > 0 && precoOk > 0) {
-          margemNova = ((precoOk - custoOk) / custoOk) * 100;
-        } else {
-          margemNova = produto.margem || 0;
-        }
+    if (isNaN(margemNova)) {
+      if (custoOk > 0 && precoOk > 0) {
+        margemNova = ((precoOk - custoOk) / custoOk) * 100;
+      } else {
+        margemNova = produto.margem || 0;
       }
+    }
 
-      const payload = {
-        nome: nomeNovo,
-        descricao: descNova,
-        categoria: catNova,
-        custo: custoOk,
-        preco: precoOk,
-        margem: margemNova,
-        estoque: isNaN(estoqueNovo) ? produto.estoque || 0 : estoqueNovo,
-        imagens: novasImagens, // backend /produtos PUT já sabe lidar
-      };
+    const payload = {
+      nome: nomeNovo,
+      descricao: descNova,
+      categoria: catNova,
+      custo: custoOk,
+      preco: precoOk,
+      margem: margemNova,
+      estoque: isNaN(estoqueNovo) ? produto.estoque || 0 : estoqueNovo,
+      imagens: novasImagens,
+    };
 
-      try {
-        const r = await fetch(`${API_PRODUTOS}/${produto.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+    try {
+      const r = await fetch(`${API_PRODUTOS}/${produto.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-        if (!r.ok) throw new Error("Erro ao atualizar produto");
-        alert("✅ Produto atualizado com sucesso!");
-        carregarProdutos();
-      } catch (e) {
-        console.error(e);
-        alert("❌ Falha ao atualizar produto.");
-      }
-    });
-  }
+      if (!r.ok) throw new Error("Erro ao atualizar produto");
+      alert("✅ Produto atualizado com sucesso!");
+      carregarProdutos();
+    } catch (e) {
+      console.error(e);
+      alert("❌ Falha ao atualizar produto.");
+    }
+  });
 }
 
 // =============================
@@ -444,7 +439,7 @@ async function excluirProduto(id, linha) {
     const js = await r.json();
 
     if (js && js.sucesso) {
-      if (linha) linha.remove();
+      linha?.remove();
       alert("🗑️ Produto excluído com sucesso!");
     } else {
       alert("❌ Erro ao excluir produto.");
@@ -459,20 +454,3 @@ async function excluirProduto(id, linha) {
 // 🚀 Inicialização
 // =============================
 document.addEventListener("DOMContentLoaded", carregarProdutos);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

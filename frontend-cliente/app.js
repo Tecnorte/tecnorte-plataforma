@@ -34,6 +34,14 @@ const mapaCategoria = {
   notebooks: "💼 Notebooks",
 };
 
+// ============================================================
+// 🌐 API dinâmica (LOCAL + RENDER)
+// ============================================================
+const API_PRODUTOS =
+  location.hostname === "localhost"
+    ? "http://localhost:3000/produtos"
+    : "https://tecnorte-plataforma-backend.onrender.com/produtos";
+
 // ------- Utilitários -------
 function formatarMoeda(v) {
   const n = Number(v ?? 0);
@@ -43,19 +51,17 @@ function formatarMoeda(v) {
 function normalizarImagens(produto) {
   if (!produto) return [];
 
-  // Se backend já manda array (caso atual)
+  // Se backend já manda array
   if (Array.isArray(produto.imagens)) {
     return produto.imagens.filter(Boolean);
   }
 
-  // Se for string JSON
+  // Se imagens for JSON
   if (typeof produto.imagens === "string" && produto.imagens.trim() !== "") {
     try {
       const arr = JSON.parse(produto.imagens);
       if (Array.isArray(arr)) return arr.filter(Boolean);
-    } catch {
-      // ignora
-    }
+    } catch {}
   }
 
   // Campos individuais
@@ -75,7 +81,8 @@ function tituloCategoria(cat) {
   return mapaCategoria[cat] || cat;
 }
 
-// ------- Renderização dos produtos -------
+// ------- Renderização -------
+
 function renderGrid(lista) {
   if (!grid || !msgVazia) return;
 
@@ -125,8 +132,9 @@ function renderGrid(lista) {
 }
 
 // ------- Modal -------
+
 function abrirModal(produto) {
-  if (!modal || !modalImagem || !modalThumbs || !modalNome || !modalDesc || !modalPreco || !modalComprar) return;
+  if (!modal) return;
 
   const imgs = normalizarImagens(produto);
   const primeira = imgs[0] || PLACEHOLDER;
@@ -136,7 +144,6 @@ function abrirModal(produto) {
   modalDesc.textContent = produto.descricao || "Sem descrição disponível.";
   modalPreco.textContent = formatarMoeda(produto.preco);
 
-  // Miniaturas
   modalThumbs.innerHTML = "";
   const lista = imgs.length ? imgs : [PLACEHOLDER];
 
@@ -146,7 +153,9 @@ function abrirModal(produto) {
     if (idx === 0) t.classList.add("is-active");
     t.addEventListener("click", () => {
       modalImagem.src = src;
-      modalThumbs.querySelectorAll("img").forEach((im) => im.classList.remove("is-active"));
+      modalThumbs.querySelectorAll("img").forEach((im) =>
+        im.classList.remove("is-active")
+      );
       t.classList.add("is-active");
     });
     modalThumbs.appendChild(t);
@@ -157,25 +166,21 @@ function abrirModal(produto) {
 }
 
 function fecharModal() {
-  if (!modal) return;
-  modal.setAttribute("aria-hidden", "true");
+  modal?.setAttribute("aria-hidden", "true");
 }
 
-if (modalFechar) {
-  modalFechar.addEventListener("click", fecharModal);
-}
+modalFechar?.addEventListener("click", fecharModal);
 
-if (modal) {
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) fecharModal();
-  });
-}
+modal?.addEventListener("click", (e) => {
+  if (e.target === modal) fecharModal();
+});
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") fecharModal();
 });
 
 // ------- Filtros & Busca -------
+
 function aplicarFiltros() {
   const texto = (campoBusca?.value || "").toLowerCase().trim();
   const cat = filtroCategoria?.value || "";
@@ -190,22 +195,29 @@ function aplicarFiltros() {
   renderGrid(produtosFiltrados);
 }
 
-if (campoBusca) campoBusca.addEventListener("input", aplicarFiltros);
-if (filtroCategoria) filtroCategoria.addEventListener("change", aplicarFiltros);
+campoBusca?.addEventListener("input", aplicarFiltros);
+filtroCategoria?.addEventListener("change", aplicarFiltros);
 
-// ------- Carregar produtos do backend -------
+// ------- Carregar produtos -------
+
 async function carregarProdutos() {
   if (!grid || !msgVazia) return;
 
   try {
-    const resp = await fetch("/produtos");
+    const resp = await fetch(API_PRODUTOS);
     const data = await resp.json();
 
     produtos = (data || []).map((p) => {
       let preco = Number(p.preco);
 
-      if ((preco === null || isNaN(preco)) && p.custo != null && p.margem != null) {
-        preco = Number((Number(p.custo) * (1 + Number(p.margem) / 100)).toFixed(2));
+      if (
+        (preco === null || isNaN(preco)) &&
+        p.custo != null &&
+        p.margem != null
+      ) {
+        preco = Number(
+          (Number(p.custo) * (1 + Number(p.margem) / 100)).toFixed(2)
+        );
       }
 
       return { ...p, preco };
@@ -216,11 +228,13 @@ async function carregarProdutos() {
     console.error("Erro ao carregar produtos:", e);
     grid.innerHTML = "";
     msgVazia.style.display = "block";
-    msgVazia.textContent = "❌ Não foi possível carregar os produtos. Verifique o servidor.";
+    msgVazia.textContent =
+      "❌ Não foi possível carregar os produtos. Verifique o servidor.";
   }
 }
 
-// ------- Comprar (simples, usando localStorage) -------
+// ------- Comprar -------
+
 function comprar(produto) {
   let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
 
@@ -243,4 +257,3 @@ function comprar(produto) {
 
 // 🚀 Inicialização
 document.addEventListener("DOMContentLoaded", carregarProdutos);
-

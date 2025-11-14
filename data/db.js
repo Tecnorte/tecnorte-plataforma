@@ -1,49 +1,50 @@
+// ============================================================
+// TecNorte • BANCO DE DADOS 3.7 — FIXO, SEGURO E SEM DUPLICAÇÃO
+// ============================================================
+
 const path = require("path");
 const fs = require("fs");
 const sqlite3 = require("sqlite3").verbose();
 
-/**
- * ============================================================
- * ⭐ TECNORTE DB 3.6 — SOLUÇÃO FINAL PARA RENDER FREE ⭐
- * Banco 100% persistente usando /opt/render/data
- * ============================================================
- */
-
-// 📌 Diretório persistente REAL no Render Free
-const persistentDir = process.env.RENDER
-  ? "/opt/render/data"
-  : path.join(process.cwd(), "data");
+// ============================================================
+// 📌 Caminho DEFINITIVO para o SQLite (Render FREE utiliza /opt/render/data)
+// ============================================================
+const isRender = !!process.env.RENDER;
+const baseDir = isRender
+  ? "/opt/render/data"              // 👉 Banco PERSISTENTE no Render
+  : path.join(__dirname, "data");   // 👉 Banco local durante desenvolvimento
 
 // Criar pasta se não existir
-if (!fs.existsSync(persistentDir)) {
-  console.log("📁 Criando pasta persistente:", persistentDir);
-  fs.mkdirSync(persistentDir, { recursive: true });
+if (!fs.existsSync(baseDir)) {
+  fs.mkdirSync(baseDir, { recursive: true });
+  console.log("📁 Pasta criada:", baseDir);
 }
 
 // Caminho final do banco
-const dbPath = path.join(persistentDir, "database.sqlite");
+const dbPath = path.join(baseDir, "database.sqlite");
+console.log("📦 Banco de dados em:", dbPath);
 
 // ============================================================
-// 🧠 Proteção contra banco corrompido
+// 🧠 Proteção contra banco corrompido (Render às vezes cria arquivos quebrados)
 // ============================================================
 if (fs.existsSync(dbPath)) {
   const size = fs.statSync(dbPath).size;
-
-  if (size < 2000) {
-    console.log("⚠️ Banco muito pequeno → removendo arquivo corrompido");
+  if (size < 5000) {
+    console.log("⚠️ Banco corrompido detectado → removendo...");
     fs.unlinkSync(dbPath);
   }
 }
 
-console.log("📦 Banco de dados em:", dbPath);
-
 // ============================================================
-// 🔗 Conectar
+// 🔗 Conectar ao banco
 // ============================================================
 const db = new sqlite3.Database(dbPath);
 
 db.serialize(() => {
-  // Criar tabela
+
+  // ============================================================
+  // 🧩 Criar tabela de produtos (seguro e idempotente)
+  // ============================================================
   db.run(`
     CREATE TABLE IF NOT EXISTS produtos (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,13 +63,14 @@ db.serialize(() => {
     )
   `);
 
-  // Garantir colunas
-  function ensureColumn(name, defSql) {
+  // ============================================================
+  // 🔐 Garantir colunas faltantes (compatível com versões antigas)
+  // ============================================================
+  function ensureColumn(name, def) {
     db.all(`PRAGMA table_info(produtos)`, (err, cols) => {
       if (err) return;
-
-      if (!cols.some((c) => c.name === name)) {
-        db.run(`ALTER TABLE produtos ADD COLUMN ${name} ${defSql}`);
+      if (!cols.some(c => c.name === name)) {
+        db.run(`ALTER TABLE produtos ADD COLUMN ${name} ${def}`);
         console.log(`🧩 Coluna adicionada: ${name}`);
       }
     });
@@ -85,17 +87,20 @@ db.serialize(() => {
   ensureColumn("estoque", "INTEGER DEFAULT 0");
 
   // ============================================================
-  // 🔁 Migração inteligente (somente se existir produtos)
+  // 🧠 MIGRAÇÃO DE IMAGENS — só quando necessário
   // ============================================================
-  db.get("SELECT COUNT(*) AS total FROM produtos", (err, row) => {
-    if (row.total === 0) {
-      console.log("📭 Nenhum produto no banco → ignorando migração");
+  db.get(`SELECT COUNT(*) AS total FROM produtos`, (err, row) => {
+    if (err) return console.error("Erro ao verificar total:", err);
+    const total = row?.total ?? 0;
+
+    if (total === 0) {
+      console.log("📭 Nenhum produto → migração ignorada.");
       return;
     }
 
-    console.log("🔄 Migrando imagens…");
+    console.log(`🔄 Migrando imagens para ${total} produtos...`);
 
-    db.all("SELECT * FROM produtos", (err, produtos) => {
+    db.all(`SELECT * FROM produtos`, (err, lista) => {
       if (err) return;
 
       const update = db.prepare(`
@@ -104,32 +109,40 @@ db.serialize(() => {
         WHERE id = ?
       `);
 
-      produtos.forEach((p) => {
-        let imagensJSON = p.imagens || (p.imagem ? JSON.stringify([p.imagem]) : null);
-        let foto1 = p.foto1 || (p.imagem || null);
-        let foto2 = p.foto2 || null;
-        let foto3 = p.foto3 || null;
+      for (const p of lista) {
+        let imagensJSON = p.imagens;
+        let f1 = p.foto1 || null;
+        let f2 = p.foto2 || null;
+        let f3 = p.foto3 || null;
 
-        update.run(imagensJSON, foto1, foto2, foto3, p.id);
-      });
+        // Caso antigo: só existia "imagem"
+        if (p.imagem && (!p.imagens || p.imagens === "")) {
+          imagensJSON = JSON.stringify([p.imagem]);
+          f1 = p.imagem;
+        }
+
+        update.run(imagensJSON || null, f1, f2, f3, p.id);
+      }
 
       update.finalize();
-      console.log("✅ Migração concluída");
+      console.log("✅ Migração de imagens concluída!");
     });
   });
 
   // ============================================================
-  // 🧠 Inserir produtos iniciais somente 1 vez
+  // 🧠 PRODUTOS INICIAIS — inserir somente uma vez
   // ============================================================
   db.get("SELECT COUNT(*) AS total FROM produtos", (err, row) => {
+    if (err) return;
+
     if (row.total > 0) {
-      console.log("📦 Produtos já existentes → não inserir iniciais");
+      console.log("📦 Produtos já existentes → não inserir iniciais.");
       return;
     }
 
     console.log("🆕 Inserindo produtos iniciais...");
 
-    const produtosIniciais = [
+    const defaults = [
       {
         nome: "Camiseta Tec Norte",
         descricao: "Camiseta oficial Tec Norte.",
@@ -137,7 +150,7 @@ db.serialize(() => {
         margem: 50,
         categoria: "diversos",
         imagem: "/frontend-cliente/img/produtos/camiseta.jpg",
-        estoque: 20,
+        estoque: 20
       },
       {
         nome: "Mouse Gamer Tec Norte",
@@ -146,7 +159,7 @@ db.serialize(() => {
         margem: 62.5,
         categoria: "informatica",
         imagem: "/frontend-cliente/img/produtos/mouse.jpg",
-        estoque: 15,
+        estoque: 15
       },
       {
         nome: "Teclado Mecânico Tec Norte",
@@ -155,8 +168,8 @@ db.serialize(() => {
         margem: 56.25,
         categoria: "acessorios",
         imagem: "/frontend-cliente/img/produtos/teclado.jpg",
-        estoque: 8,
-      },
+        estoque: 8
+      }
     ];
 
     const insert = db.prepare(`
@@ -165,32 +178,27 @@ db.serialize(() => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-    produtosIniciais.forEach((p) => {
+    for (const p of defaults) {
       const preco = Number((p.custo * (1 + p.margem / 100)).toFixed(2));
       const imagens = JSON.stringify([p.imagem]);
 
       insert.run(
-        p.nome,
-        preco,
-        p.descricao,
-        p.categoria,
-        p.custo,
-        p.margem,
-        p.imagem,
-        imagens,
-        p.imagem,
-        null,
-        null,
-        p.estoque
+        p.nome, preco, p.descricao, p.categoria,
+        p.custo, p.margem, p.imagem, imagens,
+        p.imagem, null, null, p.estoque
       );
-    });
+    }
 
     insert.finalize();
     console.log("✅ Produtos iniciais adicionados!");
   });
 });
 
+// ============================================================
+// 🔗 Exportar DB
+// ============================================================
 module.exports = db;
+
 
 
 

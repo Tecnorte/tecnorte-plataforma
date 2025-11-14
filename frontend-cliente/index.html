@@ -1,90 +1,49 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TecNorte • Loja</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Loja TecNorte</title>
 
-  <!-- CSS principal atualizado -->
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- Ícone da aba -->
-  <link rel="icon" href="img/logo-tecnorte.jpg" type="image/jpeg" />
+    <!-- CSS CORRETO -->
+    <link rel="stylesheet" href="/frontend-cliente/style-cliente.css" />
 </head>
+
 <body>
 
-  <!-- ====== CABEÇALHO ====== -->
-  <header class="tn-header">
-    <div class="tn-header__left">
-      <img src="img/logo-tecnorte.jpg" alt="TecNorte Informática" class="tn-logo" />
-      <h1 class="tn-title">Loja TecNorte</h1>
-    </div>
-    <div class="tn-header__right">
-      <a href="/admin" class="tn-btn tn-btn--ghost">⚙️ Admin</a>
-      <a href="/" class="tn-btn tn-btn--ghost">⟳ Atualizar</a>
-    </div>
-  </header>
+    <header class="topo">
+        <img src="/frontend-cliente/img/logo.png" class="logo" />
 
-  <!-- ====== FILTROS E BUSCA ====== -->
-  <section class="tn-controls">
-    <div class="tn-control tn-control--search">
-      <input id="busca" type="text" placeholder="🔎 Buscar por nome ou descrição..." />
-    </div>
+        <nav>
+            <a href="/admin">⚙️ Admin</a>
+            <a href="/">🔄 Atualizar</a>
+        </nav>
+    </header>
 
-    <div class="tn-control tn-control--select">
-      <label for="filtroCategoria">Categoria:</label>
-      <select id="filtroCategoria">
-        <option value="">Todas as categorias</option>
-        <option value="promocao">🔥 Promoção do dia</option>
-        <option value="informatica">💻 Informática</option>
-        <option value="diversos">🎧 Diversos</option>
-        <option value="acessorios">🔌 Acessórios</option>
-        <option value="carregadores">⚡ Carregadores</option>
-        <option value="notebooks">💼 Notebooks</option>
-      </select>
-    </div>
-  </section>
+    <section class="filtros">
+        <input type="text" id="busca" placeholder="Buscar por nome ou descrição">
 
-  <!-- ====== PRODUTOS ====== -->
-  <main class="tn-container">
-    <div id="gridProdutos" class="tn-grid"></div>
-    <div id="mensagemVazia" class="tn-empty" style="display:none;">
-      😕 Nenhum produto encontrado com esses filtros.
-    </div>
-  </main>
+        <select id="filtroCategoria">
+            <option value="">Todas as categorias</option>
+            <option value="promocao">Promoções</option>
+            <option value="informatica">Informática</option>
+            <option value="diversos">Diversos</option>
+            <option value="acessorios">Acessórios</option>
+            <option value="carregadores">Carregadores</option>
+            <option value="notebooks">Notebooks</option>
+        </select>
+    </section>
 
-  <!-- ====== MODAL DE DETALHES ====== -->
-  <div id="modal" class="tn-modal" aria-hidden="true">
-    <div class="tn-modal__dialog">
-      <button id="modalFechar" class="tn-modal__close">✖</button>
-      <div class="tn-modal__body">
-        <div class="tn-modal__media">
-          <img id="modalImagem" src="" alt="Imagem do produto" />
-          <div class="tn-modal__thumbs" id="modalThumbs"></div>
-        </div>
-        <div class="tn-modal__info">
-          <h2 id="modalNome">Produto</h2>
-          <p id="modalDesc" class="tn-modal__desc"></p>
-          <div class="tn-modal__price">
-            <span id="modalPreco" class="tn-price">R$ 0,00</span>
-          </div>
-          <button id="modalComprar" class="tn-btn tn-btn--primary">🛒 Comprar</button>
-        </div>
-      </div>
-    </div>
-  </div>
+    <h2 id="mensagemVazia" style="display:none">Nenhum produto encontrado</h2>
 
-  <!-- ====== RODAPÉ ====== -->
-  <footer>
-    © 2025 TecNorte Informática • Todos os direitos reservados<br>
-    💬 Fale com a gente no 
-    <a href="https://wa.me/5566999271630" target="_blank">WhatsApp</a>
-  </footer>
+    <div id="gridProdutos" class="grid"></div>
 
-  <!-- JS da loja -->
-  <script src="app.js"></script>
+    <!-- JS CORRETO -->
+    <script src="/frontend-cliente/app.js"></script>
 </body>
 </html>
+
+
 
 
 

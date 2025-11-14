@@ -58,7 +58,6 @@
       font-size: 15px;
     }
 
-    /* Estilo discreto para botão remover */
     .btn-remover {
       background: #ff3b3b;
       color: white;
@@ -134,25 +133,15 @@
       color: #004f99;
     }
 
-    /* Botão Voltar às Compras */
     #voltarLoja {
       margin-top: 25px;
       background: linear-gradient(90deg, #0077ff, #00bfff);
       color: white;
-      border: none;
       padding: 10px 20px;
       border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s;
       display: block;
       margin-left: auto;
       margin-right: auto;
-    }
-
-    #voltarLoja:hover {
-      background: #005ce6;
-      transform: translateY(-1px);
     }
 
     footer {
@@ -193,7 +182,6 @@
       <button id="pagCartao">💳 Cartão de Crédito</button>
     </div>
 
-    <!-- Seção PIX -->
     <div id="pixSection" style="display: none;">
       <h3>Pagamento via PIX</h3>
       <canvas id="qrcode"></canvas>
@@ -201,20 +189,19 @@
       <p style="color:#0099cc;">Use o QR Code ou copie o código para pagamento instantâneo.</p>
     </div>
 
-    <!-- Seção Cartão -->
     <div id="cartaoSection" style="display: none;">
       <h3>Pagamento com Cartão</h3>
       <label>Nome no cartão:</label>
-      <input type="text" id="nomeCartao" placeholder="Ex: Roberta Lopes" /><br>
+      <input type="text" id="nomeCartao" />
 
       <label>Número do cartão:</label>
-      <input type="text" id="numeroCartao" maxlength="19" placeholder="0000 0000 0000 0000" /><br>
+      <input type="text" id="numeroCartao" maxlength="19" />
 
       <label>Validade:</label>
-      <input type="text" id="validade" maxlength="5" placeholder="MM/AA" /><br>
+      <input type="text" id="validade" maxlength="5" />
 
       <label>CVV:</label>
-      <input type="text" id="cvv" maxlength="3" placeholder="123" /><br>
+      <input type="text" id="cvv" maxlength="3" />
 
       <label>Parcelas:</label>
       <select id="parcelas">
@@ -239,7 +226,6 @@
       <p>Obrigado por comprar com a <strong>TecNorte Informática</strong>.</p>
     </div>
 
-    <!-- Botão Voltar às Compras -->
     <button id="voltarLoja">⬅️ Voltar às Compras</button>
   </main>
 
@@ -248,70 +234,139 @@
     💬 Suporte via <a href="https://wa.me/5566999271630" target="_blank">WhatsApp</a>
   </footer>
 
-  <script>
-    const resumoCarrinho = document.getElementById('resumoCarrinho');
-    const totalCheckout = document.getElementById('totalCheckout');
+<script>
+// =======================================================
+// 🔗 API Dinâmica — Localhost + Render
+// =======================================================
+const API_PEDIDOS =
+  location.hostname === "localhost"
+    ? "http://localhost:3000/pedidos"
+    : "https://tecnorte-plataforma-backend.onrender.com/pedidos";
 
-    let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+const resumoCarrinho = document.getElementById('resumoCarrinho');
+const totalCheckout = document.getElementById('totalCheckout');
 
-    function atualizarCarrinho() {
-      resumoCarrinho.innerHTML = '';
-      let total = 0;
+let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
 
-      carrinho.forEach((item, index) => {
-        const linha = document.createElement('p');
-        linha.innerHTML = `${item.nome} - R$ ${item.preco.toFixed(2)}
-          <button class="btn-remover" data-index="${index}">🗑️</button>`;
-        resumoCarrinho.appendChild(linha);
-        total += item.preco;
-      });
+// =======================================================
+// 🛒 Atualizar carrinho
+// =======================================================
+function atualizarCarrinho() {
+  resumoCarrinho.innerHTML = "";
+  let total = 0;
 
-      totalCheckout.textContent = `Total: R$ ${total.toFixed(2)}`;
-      localStorage.setItem('carrinho', JSON.stringify(carrinho));
-      localStorage.setItem('totalCarrinho', total);
+  carrinho.forEach((item, index) => {
+    const linha = document.createElement("p");
+    linha.innerHTML = `${item.nome} - R$ ${item.preco.toFixed(2)}
+      <button class="btn-remover" data-index="${index}">🗑️</button>`;
+    resumoCarrinho.appendChild(linha);
+    total += item.preco;
+  });
 
-      document.querySelectorAll('.btn-remover').forEach(btn => {
-        btn.addEventListener('click', e => {
-          const idx = e.target.dataset.index;
-          carrinho.splice(idx, 1);
-          atualizarCarrinho();
-        });
-      });
+  totalCheckout.textContent = `Total: R$ ${total.toFixed(2)}`;
+  localStorage.setItem("carrinho", JSON.stringify(carrinho));
+  localStorage.setItem("totalCarrinho", total);
+
+  document.querySelectorAll(".btn-remover").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const idx = e.target.dataset.index;
+      carrinho.splice(idx, 1);
+      atualizarCarrinho();
+    });
+  });
+}
+
+atualizarCarrinho();
+
+// =======================================================
+// 🧾 FINALIZAR PEDIDO — ENVIO PARA BACKEND
+// =======================================================
+async function finalizarPedido(metodoPagamento) {
+  const nome = document.getElementById("clienteNome").value.trim();
+  const contato = document.getElementById("clienteContato").value.trim();
+
+  if (!nome || !contato) {
+    alert("⚠️ Preencha nome e contato.");
+    return;
+  }
+
+  const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+  const total = Number(localStorage.getItem("totalCarrinho") || 0);
+
+  if (carrinho.length === 0) {
+    alert("⚠️ Carrinho vazio.");
+    return;
+  }
+
+  const pedido = {
+    cliente: { nome, contato },
+    itens: carrinho,
+    total,
+    pagamento: metodoPagamento,
+  };
+
+  try {
+    const r = await fetch(API_PEDIDOS, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(pedido),
+    });
+
+    const resp = await r.json();
+
+    if (!r.ok || !resp.sucesso) {
+      alert("❌ Erro ao finalizar pedido.");
+      return;
     }
 
-    atualizarCarrinho();
+    alert("✅ Pedido finalizado! Gerando PDF...");
+    localStorage.clear();
 
-    // PIX
-    document.getElementById('pagPix').addEventListener('click', () => {
-      document.getElementById('pixSection').style.display = 'block';
-      document.getElementById('cartaoSection').style.display = 'none';
-      const chavePix = 'tecnorte@empresa.com.br';
-      const total = localStorage.getItem('totalCarrinho') || 0;
-      const codigo = `Pagamento TecNorte - Total R$ ${total} | PIX: ${chavePix}`;
-      document.getElementById('pixCode').textContent = codigo;
-      const canvas = document.getElementById('qrcode');
-      QRCode.toCanvas(canvas, codigo, { width: 200 }, err => { if (err) console.error(err); });
-    });
+    if (resp.pdf) {
+      window.open(resp.pdf, "_blank");
+    }
 
-    // Cartão
-    document.getElementById('pagCartao').addEventListener('click', () => {
-      document.getElementById('cartaoSection').style.display = 'block';
-      document.getElementById('pixSection').style.display = 'none';
-    });
+    document.getElementById("mensagemFinal").style.display = "block";
+  } catch (error) {
+    console.error(error);
+    alert("❌ Falha ao enviar pedido.");
+  }
+}
 
-    document.getElementById('confirmarCartao').addEventListener('click', () => {
-      document.getElementById('cartaoSection').style.display = 'none';
-      document.getElementById('mensagemFinal').style.display = 'block';
-      localStorage.clear();
-    });
+// =======================================================
+// 🔘 BOTÕES DE PAGAMENTO
+// =======================================================
+document.getElementById("pagPix").addEventListener("click", () => {
+  document.getElementById("pixSection").style.display = "block";
+  document.getElementById("cartaoSection").style.display = "none";
 
-    // Voltar à loja
-    document.getElementById('voltarLoja').addEventListener('click', () => {
-      window.location.href = "/frontend-cliente/index.html";
-    });
-  </script>
+  const chavePix = "tecnorte@empresa.com.br";
+  const total = localStorage.getItem("totalCarrinho") || 0;
+
+  const codigo = `Pagamento TecNorte - Total R$ ${total} | PIX: ${chavePix}`;
+  document.getElementById("pixCode").textContent = codigo;
+
+  const canvas = document.getElementById("qrcode");
+  QRCode.toCanvas(canvas, codigo, { width: 200 });
+
+  finalizarPedido("PIX");
+});
+
+document.getElementById("confirmarCartao").addEventListener("click", () => {
+  finalizarPedido("Cartão de Crédito");
+});
+
+// =======================================================
+// ⬅️ Voltar à loja
+// =======================================================
+document.getElementById("voltarLoja").addEventListener("click", () => {
+  window.location.href = "/frontend-cliente/index.html";
+});
+</script>
+
 </body>
 </html>
+
 
 
 
