@@ -1,192 +1,170 @@
-/* ============================================================
-   TecNorte Informática • Checkout
-   Tema: Azul tecnológico, limpo e centrado
-   ============================================================ */
-
-/* ----- Reset e base ----- */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+/* ===============================
+   BASE GERAL
+=================================*/
 body {
-  font-family: "Poppins", Arial, sans-serif;
-  background: linear-gradient(180deg, #f8fbff 0%, #eaf1ff 100%);
-  color: #0f2c59;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  align-items: center;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: #f2f6fb; /* FUNDO CLARO APROVADO */
+    color: #0A2A43;
 }
 
-/* ----- Cabeçalho ----- */
-header {
-  width: 100%;
-  background: linear-gradient(90deg, #002b80, #005bff);
-  color: white;
-  text-align: center;
-  padding: 16px 10px;
-  box-shadow: 0 4px 10px rgba(0, 40, 120, 0.3);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
+/* ===============================
+   HEADER
+=================================*/
+.topo {
+    width: 100%;
+    background: linear-gradient(90deg, #003366, #0055a5); /* Azul TecNorte */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 30px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.15);
 }
 
-header img {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #ffffffaa;
+.logo {
+    height: 55px;
 }
 
-header h1 {
-  font-size: 22px;
-  font-weight: 700;
-  color: #fff;
+/* LINKS DO TOPO */
+.topo nav a {
+    color: #ffffff;
+    margin-left: 20px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
 }
 
-/* ----- Container do checkout ----- */
-.checkout-container {
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 30, 100, 0.1);
-  width: min(600px, 90vw);
-  margin: 30px auto;
-  padding: 30px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+.topo nav a:hover {
+    text-decoration: underline;
 }
 
-.checkout-container h2,
-.checkout-container h3 {
-  color: #002b80;
-  margin-bottom: 6px;
-  text-align: center;
+/* ===============================
+   FILTROS
+=================================*/
+.filtros {
+    width: 100%;
+    margin: 20px auto;
+    max-width: 900px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
 }
 
-#resumoCarrinho p {
-  margin: 4px 0;
-  font-size: 15px;
-  color: #333;
-  text-align: left;
+.filtros input,
+.filtros select {
+    padding: 12px;
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid #d0d7e2;
+    background: white;
+    color: #003366;
+    width: 260px;
 }
 
-#totalCheckout {
-  font-weight: 700;
-  color: #0055ff;
-  text-align: center;
-  margin-top: 10px;
-  font-size: 18px;
+/* ===============================
+   GRID DE PRODUTOS
+=================================*/
+.grid {
+    display: grid;
+    justify-content: center;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 25px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
 }
 
-/* ----- Botões ----- */
-button {
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
+/* ===============================
+   CARD DE PRODUTO
+=================================*/
+.card-produto {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    transition: transform .2s, box-shadow .2s;
 }
 
-#pagPix {
-  background: linear-gradient(90deg, #00c6ff, #0072ff);
-  color: white;
-  flex: 1;
-  margin-right: 5px;
-}
-#pagPix:hover {
-  background: #0077ff;
+.card-produto:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 
-#pagCartao {
-  background: linear-gradient(90deg, #ff8a00, #e52e71);
-  color: white;
-  flex: 1;
-  margin-left: 5px;
-}
-#pagCartao:hover {
-  opacity: 0.9;
+/* FOTO DO PRODUTO */
+.card-produto img {
+    width: 100%;
+    border-radius: 10px;
+    height: 180px;
+    object-fit: cover;
 }
 
-#confirmarCartao {
-  background: #0077ff;
-  color: white;
-  width: 100%;
-  margin-top: 10px;
+/* NOME */
+.card-produto h3 {
+    margin: 10px 0 5px;
+    color: #003366;
 }
 
-/* ----- PIX Section ----- */
-#pixSection {
-  text-align: center;
+/* CATEGORIA */
+.card-produto .cat {
+    font-size: 13px;
+    color: #6c7a8a;
 }
 
-#qrcode {
-  margin: 20px auto;
-  background: white;
-  border-radius: 10px;
-  padding: 8px;
-  box-shadow: 0 0 12px rgba(0, 50, 150, 0.1);
+/* PREÇO */
+.card-produto .preco {
+    font-size: 20px;
+    font-weight: bold;
+    color: #00A8FF;
+    margin: 10px 0;
 }
 
-#pixCode {
-  font-size: 14px;
-  color: #002b80;
-  word-wrap: break-word;
-  margin: 10px auto;
-  width: 90%;
+/* PROMOÇÃO */
+.promo-tag {
+    background: #FF9900;
+    color: white;
+    font-weight: bold;
+    padding: 3px 10px;
+    border-radius: 8px;
+    font-size: 12px;
 }
 
-/* ----- Cartão Section ----- */
-#cartaoSection {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* BOTÕES */
+.botoes {
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
 }
 
-#cartaoSection input,
-#cartaoSection select {
-  padding: 10px;
-  border: 1px solid #b5c8ff;
-  border-radius: 8px;
-  outline: none;
-  font-size: 15px;
-}
-#cartaoSection input:focus,
-#cartaoSection select:focus {
-  border-color: #0077ff;
-  box-shadow: 0 0 0 3px rgba(0, 119, 255, 0.2);
+.btn-ver,
+.btn-comprar {
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    width: 48%;
 }
 
-/* ----- Mensagem final ----- */
-#mensagemFinal {
-  text-align: center;
-  padding: 20px;
+/* BOTÃO VER MAIS */
+.btn-ver {
+    background: #e3f3ff;
+    color: #0066aa;
+    border: 1px solid #bcdcff;
 }
-#mensagemFinal h3 {
-  color: #0077ff;
+.btn-ver:hover {
+    background: #d8edff;
 }
 
-/* ----- Rodapé ----- */
-footer {
-  text-align: center;
-  padding: 14px 0;
-  background: #001f66;
-  color: #fff;
-  font-size: 13px;
-  margin-top: auto;
-  width: 100%;
+/* BOTÃO COMPRAR */
+.btn-comprar {
+    background: #00A8FF;
+    color: white;
+    border: none;
 }
-footer a {
-  color: #00bfff;
-  text-decoration: none;
-  font-weight: 600;
+.btn-comprar:hover {
+    background: #008ed7;
 }
-footer a:hover {
-  text-decoration: underline;
-}
+
 
 

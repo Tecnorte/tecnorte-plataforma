@@ -23,6 +23,7 @@
     <h1>Painel Administrativo</h1>
 
     <section class="form-produto">
+
         <input type="text" id="nome" placeholder="Nome do produto">
         <input type="number" id="custo" placeholder="Custo">
         <input type="number" id="preco" placeholder="Preço">
@@ -40,22 +41,29 @@
             <option value="notebooks">Notebooks</option>
         </select>
 
+        <!-- FOTO 1 -->
         <p>Foto 1:</p>
-        <input id="foto1" type="file">
+        <input id="foto1" type="file" accept="image/*">
         <img id="preview1" style="display:none;width:80px">
+        <button id="remove1" style="display:none" type="button">❌ Remover</button>
 
+        <!-- FOTO 2 -->
         <p>Foto 2:</p>
-        <input id="foto2" type="file">
+        <input id="foto2" type="file" accept="image/*">
         <img id="preview2" style="display:none;width:80px">
+        <button id="remove2" style="display:none" type="button">❌ Remover</button>
 
+        <!-- FOTO 3 -->
         <p>Foto 3:</p>
-        <input id="foto3" type="file">
+        <input id="foto3" type="file" accept="image/*">
         <img id="preview3" style="display:none;width:80px">
+        <button id="remove3" style="display:none" type="button">❌ Remover</button>
 
         <textarea id="descricao" placeholder="Descrição"></textarea>
 
-        <button id="btnNovo">Novo Produto</button>
-        <button id="btnSalvar">Salvar Produto</button>
+        <button id="btnNovo" type="button">Novo Produto</button>
+        <button id="btnSalvar" type="button">Salvar Produto</button>
+
     </section>
 
     <table>
@@ -81,4 +89,5 @@
     <script src="/frontend/app.js"></script>
 </body>
 </html>
+
 

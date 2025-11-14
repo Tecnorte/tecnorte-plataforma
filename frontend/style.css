@@ -1,170 +1,182 @@
 /* ============================================================
-   🌐 TECNORTE INFORMÁTICA - PAINEL ADMINISTRATIVO
-   Tema: Azul metálico, limpo, tecnológico e responsivo
+   TECNORTE INFORMÁTICA - PAINEL ADMINISTRATIVO
+   Tema azul metálico tecnológico + visual atual do HTML
    ============================================================ */
 
 /* ---------- GERAL ---------- */
 body {
   font-family: "Poppins", Arial, sans-serif;
-  background: linear-gradient(180deg, #f9fbff 0%, #eef3ff 100%);
+  background: #f5f8ff;
   color: #1b263b;
   margin: 0;
   padding: 0;
 }
 
-.container {
-  width: 90%;
-  max-width: 1100px;
-  margin: 40px auto;
-  background: #ffffff;
-  border-radius: 14px;
-  box-shadow: 0 4px 20px rgba(0, 50, 120, 0.1);
-  padding: 30px 40px;
+h1 {
+  text-align: center;
+  color: #003B88;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+/* ---------- CABEÇALHO EXISTENTE (.topo) ---------- */
+.topo {
+  background: linear-gradient(90deg, #003B88, #0077ff);
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+}
+
+.topo .logo {
+  height: 55px;
+}
+
+.topo nav a {
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 15px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.topo nav a:hover {
+  background: rgba(255,255,255,0.25);
 }
 
 /* ---------- FORMULÁRIO ---------- */
 .form-produto {
+  width: 92%;
+  max-width: 900px;
+  margin: 20px auto;
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,50,120,0.15);
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-bottom: 25px;
 }
 
 .form-produto input,
+.form-produto select,
 .form-produto textarea {
   font-size: 15px;
-  padding: 10px 12px;
-  border: 1px solid #b5c8ff;
+  padding: 10px;
+  border: 1px solid #bcd0ff;
   border-radius: 8px;
   outline: none;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: 0.3s;
 }
 
 .form-produto input:focus,
+.form-produto select:focus,
 .form-produto textarea:focus {
   border-color: #0077ff;
-  box-shadow: 0 0 8px rgba(0, 119, 255, 0.2);
+  box-shadow: 0 0 8px rgba(0,119,255,0.2);
 }
 
-textarea {
-  resize: vertical;
+.form-produto textarea {
   min-height: 80px;
+  resize: vertical;
 }
 
-/* ---------- SEÇÃO DE IMAGENS ---------- */
-.imagens-produto {
-  border: 1px dashed #00bfff;
+/* ---------- PREVIEW DAS IMAGENS ---------- */
+#preview1, #preview2, #preview3 {
+  width: 100px;
+  height: 100px;
   border-radius: 10px;
-  padding: 15px;
-  background-color: rgba(0, 191, 255, 0.05);
-  margin-top: 10px;
-}
-
-.imagens-produto label {
-  display: block;
-  font-weight: 600;
-  color: #005ea6;
-  margin-top: 10px;
-}
-
-.imagens-produto input[type="file"] {
-  margin-top: 4px;
-}
-
-.imagens-produto img {
-  display: block;
-  margin-top: 6px;
-  max-width: 130px;
-  max-height: 130px;
-  border-radius: 8px;
-  border: 2px solid #00bfff;
+  border: 2px solid #00aaff;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  margin-top: 6px;
+  display: none;
 }
 
-.imagens-produto img:hover {
-  transform: scale(1.05);
-}
-
-.btn-remove {
-  background: transparent;
-  border: none;
-  color: #ff4b4b;
-  cursor: pointer;
-  margin-top: 4px;
-  font-size: 14px;
-  transition: color 0.2s ease;
-}
-
-.btn-remove:hover {
-  color: #ff0000;
-}
-
-/* ---------- BOTÃO SALVAR ---------- */
-.btn-salvar {
-  background: linear-gradient(90deg, #0077ff 0%, #00bfff 100%);
-  color: #fff;
+/* ---------- BOTÕES ---------- */
+#btnNovo,
+#btnSalvar {
+  padding: 12px;
   border: none;
   border-radius: 10px;
-  padding: 12px;
   font-size: 16px;
-  font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.3s ease;
-  margin-top: 10px;
+  font-weight: 600;
+  transition: 0.2s ease-in-out;
 }
 
-.btn-salvar:hover {
+#btnNovo {
+  background: #e0ecff;
+  color: #0051a8;
+}
+
+#btnNovo:hover {
+  background: #cfe0ff;
+}
+
+#btnSalvar {
+  background: linear-gradient(90deg, #0077ff, #00bfff);
+  color: #ffffff;
+}
+
+#btnSalvar:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(0, 191, 255, 0.3);
+  box-shadow: 0 3px 14px rgba(0,191,255,0.35);
 }
 
-/* ---------- TABELA ---------- */
-.tabela-container {
-  overflow-x: auto;
-}
-
+/* ---------- TABELA DE PRODUTOS ---------- */
 table {
-  width: 100%;
+  width: 92%;
+  margin: 30px auto;
   border-collapse: collapse;
-  font-size: 14px;
-  text-align: left;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 3px 15px rgba(0,50,120,0.1);
+}
+
+thead tr {
+  background: #0077ff;
+  color: #ffffff;
 }
 
 th {
-  background: #0077ff;
-  color: #fff;
-  padding: 10px;
-  border-radius: 4px 4px 0 0;
+  padding: 12px;
+  text-align: left;
+  font-size: 14px;
 }
 
 td {
-  padding: 10px;
-  border-bottom: 1px solid #e2e8f0;
-  vertical-align: middle;
+  padding: 12px;
+  border-bottom: 1px solid #e4ebf5;
+  font-size: 14px;
 }
 
 tr:hover {
-  background-color: rgba(0, 191, 255, 0.05);
-  transition: 0.2s;
+  background-color: rgba(0,123,255,0.05);
 }
 
 td img {
-  width: 50px;
-  height: 50px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  width: 55px;
+  height: 55px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #bcd0ff;
 }
 
 /* ---------- BOTÕES DE AÇÃO ---------- */
 button.editar,
 button.excluir {
   border: none;
-  padding: 6px 8px;
+  padding: 6px 10px;
   margin: 2px;
   cursor: pointer;
   border-radius: 6px;
-  transition: background-color 0.2s ease;
+  font-size: 13px;
+  transition: 0.2s;
 }
 
 button.editar {
@@ -172,126 +184,51 @@ button.editar {
   color: #0066cc;
 }
 
-button.editar:hover {
-  background: #cce4ff;
-}
-
 button.excluir {
   background: #ffe5e5;
   color: #cc0000;
+}
+
+button.editar:hover {
+  background: #cfe3ff;
 }
 
 button.excluir:hover {
   background: #ffcccc;
 }
 
-/* ---------- RESPONSIVIDADE ---------- */
-@media (max-width: 768px) {
-  .container {
-    padding: 20px;
-  }
-  table {
-    font-size: 13px;
-  }
-  .form-produto input,
-  .form-produto textarea {
-    font-size: 14px;
-  }
-}
-
-/* ============================================================
-   🧠 BARRA SUPERIOR TECNORTE - CABEÇALHO FIXO
-   ============================================================ */
-.header-tecnorte {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: linear-gradient(90deg, #002b5c 0%, #0057b7 50%, #00bfff 100%);
-  color: #fff;
-  padding: 12px 30px;
-  border-bottom: 4px solid #00bfff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-
-.logo-area {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.logo-tecnorte {
-  width: 50px;
-  height: 50px;
-  border-radius: 12px;
-  border: 2px solid #00bfff;
-  background: #fff;
-  object-fit: cover;
-  box-shadow: 0 0 12px rgba(0, 191, 255, 0.4);
-}
-
-.header-tecnorte h1 {
-  font-size: 1.4rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-.versao-sistema {
-  display: flex;
-  align-items: center;
-}
-
-.btn-top {
-  color: #fff;
-  text-decoration: none;
-  padding: 6px 10px;
-  border: 1px solid rgba(255,255,255,0.4);
+/* ---------- TABELA EDITÁVEL (inline edit) ---------- */
+.inp-nome,
+.inp-desc,
+.inp-custo,
+.inp-margem,
+.inp-preco,
+.inp-estoque,
+.inp-cat {
+  width: 100%;
+  padding: 6px;
   border-radius: 6px;
-  margin-left: 8px;
-  font-size: 0.9rem;
-  transition: background .2s, transform .1s;
+  border: 1px solid #c5d8ff;
 }
 
-.btn-top:hover {
-  background: rgba(255,255,255,0.15);
+/* para inputs dentro da tabela */
+td input,
+td select {
+  font-size: 14px;
 }
 
-.btn-top:active {
-  transform: translateY(1px);
-}
+/* ---------- RESPONSIVO ---------- */
+@media (max-width: 768px) {
+  table {
+    font-size: 12px;
+  }
 
-/* Dá um respiro entre o cabeçalho e o conteúdo */
-.container {
-  margin-top: 16px;
-}
+  .form-produto {
+    padding: 15px;
+  }
 
-/* ---------- CABEÇALHO TECNORTE ---------- */
-.header-tecnorte {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  background: linear-gradient(90deg, #001f3f 0%, #004a99 100%);
-  color: #ffffff;
-  padding: 18px 40px;
-  border-radius: 0 0 12px 12px;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
-  margin-bottom: 25px;
-}
-
-.logo-tecnorte {
-  height: 60px;
-  width: auto;
-  border-radius: 10px;
-  border: 2px solid #00bfff;
-  background: #ffffff;
-  padding: 5px;
-}
-
-.header-tecnorte h1 {
-  font-size: 1.6rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  margin: 0;
+  #preview1, #preview2, #preview3 {
+    width: 80px;
+    height: 80px;
+  }
 }

@@ -36,8 +36,15 @@ app.use('/img', express.static(path.join(__dirname, 'frontend', 'img')));
 const produtosRoute = require('./routes/produtos');
 const pedidosRoute = require('./routes/pedidos');
 
+// Rotas de API (cliente / app)
 app.use('/produtos', produtosRoute);
 app.use('/pedidos', pedidosRoute);
+
+// ===========================================
+// 📌 Rotas do Painel ADMIN
+// ===========================================
+app.use('/admin/produtos', produtosRoute);
+app.use('/admin/pedidos', pedidosRoute);
 
 // ===========================================
 // 🗂️ Garantir pasta data/cupons
